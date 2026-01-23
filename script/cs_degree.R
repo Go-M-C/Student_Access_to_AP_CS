@@ -38,6 +38,20 @@ cs_clean <- cs_clean%>%
            as.numeric()
   ) %>% 
   select(1,13,everything())
-           
 
-  
+cs_rename <- cs_clean %>% 
+  rename(bachelor_total = number,
+         bachelor_annual_percent_change = annual_percent_change,
+         bachelor_male = male_4,
+         bachelor_female = female_5,
+         bachelor_female_percent = percent_female,
+         
+         master_total = total_7,
+         master_male = male_8,
+         master_female = female_9,
+         
+         doctor_total = total_10,
+         doctor_male = male_11,
+         doctor_female = female_12)
+
+
