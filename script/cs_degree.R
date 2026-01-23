@@ -53,5 +53,19 @@ cs_rename <- cs_clean %>%
          doctor_total = total_10,
          doctor_male = male_11,
          doctor_female = female_12)
+  
+
+cs_degree <- cs_rename %>% 
+  select(2,5,6,9,10,12,13) %>% 
+  pivot_longer(
+    cols = starts_with(c("bachelor","master","doctor")),
+    names_to = c("degree_level","gender"),
+    names_sep = "_",
+    values_to = "value"
+  )
+
+write.csv(cs_degree, file = "data/cs_degree_clean.csv", row.names=FALSE)
+
+
 
 
