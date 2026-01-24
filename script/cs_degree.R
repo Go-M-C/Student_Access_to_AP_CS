@@ -66,6 +66,34 @@ cs_degree <- cs_rename %>%
 
 write.csv(cs_degree, file = "data/cs_degree_clean.csv", row.names=FALSE)
 
+#########################################################################
 
+cs <- read.csv(here("data","cs_degree_clean.csv"))
+
+cs <- cs %>% 
+  mutate(
+    degree_level = factor(degree_level,
+                          levels = c("bachelor","master","doctor")),
+    gender = factor(gender,
+                    levels = c("male","female"),
+                    labels = c("Male","Female"))
+  )
+
+cs %>% 
+  filter(degree_level == "bachelor") %>% 
+  ggplot(aes(x = academic_year, y = value, color = gender)) +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
+  labs(
+    title = "CS Bachelor's Degree by Gender (1965-2021)",
+    x = "Year",
+    y = "Number of Degrees",
+    color = "Gender"
+  )+
+  theme_minimal(base_size = 14)
+
+# In the plot above, x-axis labels were intentionally limited to maintain
+# readability and emphasize long-term trends.
 
 
