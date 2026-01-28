@@ -153,7 +153,10 @@ cs_ba_anim <- cs %>%
     plot.title = element_text(size = 20, face = "bold"))+
   transition_reveal(academic_year)
 
-animate(cs_ba_anim, nframes = 300, 
+ba_anim <- animate(cs_ba_anim, nframes = 300, 
         fps = 50, duration = 15, 
         width = 800, height = 500,
         renderer = gifski_renderer())
+
+anim_save(filename = here("script","cs_ba_anim.gif"), 
+          animation = ba_anim)
