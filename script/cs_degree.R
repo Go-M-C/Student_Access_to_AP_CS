@@ -87,6 +87,7 @@ cs %>%
   geom_line(size = 1) +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
+  scale_color_viridis_d()+
   labs(
     title = "CS Bachelor's Degree by Gender (1965-2021)",
     x = "Year",
@@ -99,9 +100,10 @@ cs %>%
 cs %>% 
   filter(degree_level == "master") %>% 
   ggplot(aes(x = academic_year, y = value, color = gender)) +
-  geom_line(size = 1) +
+  geom_line(size = 1, alpha = 1) +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
+  scale_color_viridis_d()+
   labs(
     title = "CS Master's Degree by Gender (1965-2022)",
     x = "Year",
