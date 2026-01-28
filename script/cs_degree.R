@@ -10,6 +10,8 @@ library(readxl)
 library(gganimate)
 library(gifski)
 library(janitor)
+# remotes::install_github("hrbrmstr/hrbrthemes")
+library(hrbrthemes)
 
 ## Reading data
 cs_raw <- read_xlsx(here("data","cs_degree_trends.xlsx"), skip = c(3))
@@ -96,4 +98,29 @@ cs %>%
 # In the plot above, x-axis labels were intentionally limited to maintain
 # readability and emphasize long-term trends.
 
+cs_ba_anim <- cs %>% 
+  filter(degree_level == "bachelor") %>% 
+  ggplot(aes(x = academic_year, y = value, group = gender, color = gender)) +
+  geom_line(size = 1.2, alpha = 0.8) +
+  geom_point(size = 3) +
+  geom_text(aes(label = paste0(gender, ":", value)),
+            hjust = -0.2, vjust = 0.5, size = 4, fontface = "bold") +
+  scale_color_viridis_d(begin = 0.2, end = 0.8) +
+  scale_y_continuous()+
+  scale_x_continuous(breaks = seq(1965, 2022, by = 1))+
+  coord_cartesian(clip = "off") +
+  labs(title = "CS Bachelor's Degree by Gender (1965-2021)",
+       x = "Year",
+       y = "Number of Degrees",
+       color = "Gender") +
+  theme_minimal()+
+  theme(
+    plot.margin = margin(10,100,10,10),
+    legend.position = "none",
+    plot.title = element_text(size = 20, face = "bold"))+
+  transition_reveal(academic_year)
 
+animate(cs_ba_anim, nframes = 300, 
+        fps = 50, duration = 15, 
+        width = 800, height = 500,
+        renderer = gifski_renderer())
