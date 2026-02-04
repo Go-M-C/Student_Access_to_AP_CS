@@ -11,15 +11,7 @@ library(purrr)
 library(base64enc)
 gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
 
-# path_to_www <- file.path(getwd(), "www/")
-# if (dir.exists(path_to_www)){
-#   addResourcePath(prefix = "my_assets", directoryPath = path_to_www)
-# } else {
-#   warning("The www folder was not found at:", path_to_www)
-# }
-
 # loading data
-
 cs <- read.csv(here("data","cs_degree_clean.csv"))
 cs <- cs %>% 
   mutate(
