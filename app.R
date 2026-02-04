@@ -57,7 +57,10 @@ ui <- fluidPage(
           plotOutput("cs_trend_plot", height = "550px"),
           br(), # adds spacing
           h4("Animated Trends for Bachelor's Degree"), # adds heading
-          img(src = "cs_ba_anim.gif", height = "500px")
+          tags$video(src = "cs_ba_anim.mp4", type = "video/mp4", 
+                     autoplay = TRUE,
+                     loop = TRUE,
+                     height = "500px")
         )
         
       )
@@ -123,4 +126,4 @@ server <- function(input, output, session){
 
 # RUN APP
 shinyApp(ui,server)
-rsconnect::deployApp()
+#rsconnect::deployApp()
