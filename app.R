@@ -7,6 +7,16 @@ library(scales)
 library(here)
 library(plotly)
 
+library(base64enc)
+gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
+
+# path_to_www <- file.path(getwd(), "www/")
+# if (dir.exists(path_to_www)){
+#   addResourcePath(prefix = "my_assets", directoryPath = path_to_www)
+# } else {
+#   warning("The www folder was not found at:", path_to_www)
+# }
+
 # loading data
 
 cs <- read.csv(here("data","cs_degree_clean.csv"))
@@ -30,11 +40,28 @@ ui <- fluidPage(
     
     nav_panel(
       "CS for All", 
-      h2("Research Questions:"),
-      h4("1.	How have computer and information sciences degrees conferred in the U.S. changed over time by gender and degree level?"),
-      h4("2.	Where does Oregon stand in the national CS degree landscape?"),
-      h4("3.	What gender and racial disparities exist in participation in secondary-level computer science coursework nationwide?"),
-    ),
+      fluidRow(
+        column(width = 8, offset = 2,
+               h2("Research Questions:"),
+               tags$ul(
+                 tags$li(h5("How have computer and information sciences degrees conferred in the U.S. changed over time by gender and degree level?")),
+                 tags$li(h5("Where does Oregon stand in the national CS degree landscape?")),
+                 tags$li(h5("What gender and racial disparities exist in participation in secondary-level computer science coursework nationwide?"))
+               ),
+               hr(),
+               div(
+               style = "text-align: center; margin-top:30px;",
+
+               h4("Historical Context: animation of conferred bachelor's growth"),
+               img(src = gif_base64, 
+                   width = "100%", 
+                   style = "max-width: 700px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"),
+               p(tags$em("This project explores the equity access status of computer science(CS) in the U.S. from secondary participation to higher education Degrees"),
+                 style = "margin-top: 10px; color: #666;")
+               )
+               )
+        )
+      ),
     
     nav_panel(
       "CS Degree Trends",
@@ -61,21 +88,10 @@ ui <- fluidPage(
         ),
         
         mainPanel(
-          plotlyOutput("cs_trend_plot", height = "550px"),
-          hr(), # adds spacing
-          div(
-            style = "text-align: center; 
-            background-color: #f8f9fa; 
-            padding: 20px;
-            border-radius: 10px",
-            h4("Historical Context: animation of conferred bachelor's growth"),
-            img(src = "cs_ba_anim.gif", 
-                width = "100%", 
-                style = "max-width: 800px;height = auto;")
-        )
-      )
-    )
-    ),
+          plotlyOutput("cs_trend_plot", height = "550px")
+)
+)
+),
     
     nav_panel(
       "CS Degrees by State", 
@@ -120,7 +136,7 @@ server <- function(input, output, session){
     p1 <- ggplot(filtered_cs(),
            aes(x = academic_year, y = value, 
                color = gender, frame = academic_year)) +
-      geom_line(size = 1) +
+      geom_line(aes(group = gender), size = 1) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
       scale_color_viridis_d(begin = 0.2, end = 0.8) +
