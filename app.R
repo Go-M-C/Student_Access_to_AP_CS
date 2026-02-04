@@ -54,7 +54,10 @@ ui <- fluidPage(
         ),
         
         mainPanel(
-          plotOutput("cs_trend_plot", height = "550px")
+          plotOutput("cs_trend_plot", height = "550px"),
+          br(), # adds spacing
+          h4("Animated Trends for Bachelor's Degree"), # adds heading
+          img(src = "cs_ba_anim.gif", height = "500px")
         )
         
       )
@@ -120,3 +123,4 @@ server <- function(input, output, session){
 
 # RUN APP
 shinyApp(ui,server)
+rsconnect::deployApp()

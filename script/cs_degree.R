@@ -158,5 +158,4 @@ ba_anim <- animate(cs_ba_anim, nframes = 300,
         width = 800, height = 500,
         renderer = gifski_renderer())
 
-anim_save(filename = here("script","cs_ba_anim.gif"), 
-          animation = ba_anim)
+anim_save(filename = "cs_ba_anim.gif",animation = ba_anim, path = "www:")
