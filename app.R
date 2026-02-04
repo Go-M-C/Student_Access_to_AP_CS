@@ -5,7 +5,7 @@ library(dplyr)
 library(ggplot2)
 library(scales)
 library(here)
-
+library(plotly)
 
 # loading data
 
@@ -20,19 +20,26 @@ cs <- cs %>%
   )
 
 
-# UI
+##############################################################################
+#UI
 ui <- fluidPage(
+  theme = bs_theme(version = 5, bootswatch = "minty"),
   
   navset_pill(
     id = "tab",
     
-    nav_panel("CS for All"),
+    nav_panel(
+      "CS for All", 
+      h2("Research Questions:"),
+      h4("1.	How have computer and information sciences degrees conferred in the U.S. changed over time by gender and degree level?"),
+      h4("2.	Where does Oregon stand in the national CS degree landscape?"),
+      h4("3.	What gender and racial disparities exist in participation in secondary-level computer science coursework nationwide?"),
+    ),
     
     nav_panel(
       "CS Degree Trends",
       
       sidebarLayout(
-        
         sidebarPanel(
           selectInput(
             inputId = "degree_choice",
@@ -54,26 +61,34 @@ ui <- fluidPage(
         ),
         
         mainPanel(
-          plotOutput("cs_trend_plot", height = "550px"),
-          br(), # adds spacing
-          h4("Animated Trends for Bachelor's Degree"), # adds heading
-          tags$video(src = "cs_ba_anim.mp4", type = "video/mp4", 
-                     autoplay = TRUE,
-                     loop = TRUE,
-                     height = "500px")
+          plotlyOutput("cs_trend_plot", height = "550px"),
+          hr(), # adds spacing
+          div(
+            style = "text-align: center; 
+            background-color: #f8f9fa; 
+            padding: 20px;
+            border-radius: 10px",
+            h4("Historical Context: animation of conferred bachelor's growth"),
+            img(src = "cs_ba_anim.gif", 
+                width = "100%", 
+                style = "max-width: 800px;height = auto;")
         )
-        
       )
+    )
     ),
     
-    nav_panel("CS Degrees by State"),
+    nav_panel(
+      "CS Degrees by State", 
+      h2("State Map")),
     
-    nav_panel("National AP CS Participation"),
+    nav_panel(
+      "National AP CS Participation",
+      h2("Treemap")),
     
     nav_panel(
       "About",
       h3("About This Project"),
-      p("Created by Michelle Cui."),
+      p("Created by Michelle Cui"),
       p(
         a(
           "GitHub Repository",
@@ -86,26 +101,25 @@ ui <- fluidPage(
 )
 
 
-
+#############################################################################
 # SERVER
 
 server <- function(input, output, session){
-
   
   filtered_cs <- reactive({
     cs %>% 
       filter(
         degree_level == input$degree_choice,
-        gender %in% input$gender_choice
-      )
+        gender %in% input$gender_choice)
   })
   
   # Output
   
-  output$cs_trend_plot <- renderPlot({
+  output$cs_trend_plot <- renderPlotly({
     
-    ggplot(filtered_cs(),
-           aes(x = academic_year, y = value, color = gender)) +
+    p1 <- ggplot(filtered_cs(),
+           aes(x = academic_year, y = value, 
+               color = gender, frame = academic_year)) +
       geom_line(size = 1) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
@@ -119,11 +133,17 @@ server <- function(input, output, session){
         y = "Number of Degrees",
         color = "Gender"
       )+
-      theme_minimal(base_size = 14)
+      theme_minimal()
+    
+    ggplotly(p1) %>% 
+      animation_opts(frame = 100, transition = 0, redraw = FALSE) %>% 
+      animation_slider(currentvalue = list(prefix = "Year: "))
+    
   })
+
 }
 
-
+##############################################################################
 # RUN APP
 shinyApp(ui,server)
 #rsconnect::deployApp()
