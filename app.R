@@ -6,6 +6,7 @@ library(ggplot2)
 library(scales)
 library(here)
 library(plotly)
+library(purrr)
 
 library(base64enc)
 gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
@@ -175,5 +176,5 @@ server <- function(input, output, session){
 
 ##############################################################################
 # RUN APP
-shinyApp(ui,server)
+shinyApp(ui = ui,server = server)
 #rsconnect::deployApp()
