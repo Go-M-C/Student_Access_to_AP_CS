@@ -128,34 +128,52 @@ cs %>%
   theme_minimal(base_size = 14)
 
 
+
 # In the plot above, x-axis labels were intentionally limited to maintain
 # readability and emphasize long-term trends.
 
-cs_ba_anim <- cs %>% 
+ba_cs <- cs %>% 
   filter(degree_level == "bachelor") %>% 
+  group_by(academic_year) %>% 
+  mutate(annual_avg = mean(value)) %>% 
+  ungroup()
+
+
+cs_ba_anim <- ba_cs %>% 
   ggplot(aes(x = academic_year, y = value, group = gender, color = gender)) +
+  geom_line(aes(y = annual_avg, group = 1), color = "gray50", 
+            linetype = "dashed", size = 0.8)+
+  geom_text(aes(y = annual_avg, 
+                label = "Annual Avg"),
+            x = 1970, color = "gray50", vjust = -1, 
+            check_overlap = TRUE) +
   geom_line(size = 1.2, alpha = 0.8) +
   geom_point(size = 3) +
   geom_text(aes(label = paste0(gender, ":", value)),
-            hjust = -0.2, vjust = 0.5, size = 4, fontface = "bold") +
+            hjust = -0.1, vjust = 0.5, size = 4, fontface = "bold") +
   scale_color_viridis_d(begin = 0.2, end = 0.8) +
-  scale_y_continuous()+
-  scale_x_continuous(breaks = seq(1965, 2022, by = 1))+
+  scale_y_continuous(labels = scales::comma)+
+  scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
   coord_cartesian(clip = "off") +
   labs(title = "CS Bachelor's Degree by Gender (1965-2021)",
+       subtitle = "Dashed line represents the annualy computer and information sciences 
+        conferred by postsecondary institutions",
        x = "Year",
        y = "Number of Degrees",
        color = "Gender") +
   theme_minimal()+
   theme(
-    plot.margin = margin(10,100,10,10),
+    plot.margin = margin(10,120,10,10),
     legend.position = "none",
-    plot.title = element_text(size = 20, face = "bold"))+
-  transition_reveal(academic_year)
+    plot.title = element_text(
+      size = 20, 
+      face = "bold"))+
+  transition_reveal(academic_year)+
+  view_follow(fixed_y = TRUE)
 
 ba_anim <- animate(cs_ba_anim, nframes = 300, 
-        fps = 50, duration = 15, 
+        fps = 20, duration = 15, 
         width = 800, height = 500,
         renderer = gifski_renderer())
 
-anim_save(filename = "cs_ba_anim.mp4",animation = ba_anim, path = "www:")
+anim_save(filename = "cs_ba_anim.gif",animation = ba_anim, path = "www:")
