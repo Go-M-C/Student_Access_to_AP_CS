@@ -104,6 +104,13 @@ ui <- fluidPage(
       p("Data Source"),
       p(
         a(
+          "Overview of Computer Science Implementation Plan",
+          href = "https://www.oregon.gov/ode/schools-and-districts/grants/Pages/Computer-Science-Implementation-Plan.aspx",
+          target = "_blank"
+        )
+      ),
+      p(
+        a(
           "GitHub Repository",
           href = "https://github.com/Go-M-C/Student_Access_to_AP_CS",
           target = "_blank"
