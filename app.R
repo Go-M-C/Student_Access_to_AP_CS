@@ -34,7 +34,7 @@ cs <- cs %>%
 #UI
 ui <- fluidPage(
   theme = bs_theme(
-    bg = "#8B4513",fg = "white", preimary = "#ffbe8f",
+    bg = "white",fg = "#180e00", primary = "#ab9f7a",
     base_font = font_google("Space Mono"),
     code_font = font_google("Space Mono")
   ),
@@ -176,4 +176,4 @@ server <- function(input, output, session){
 ##############################################################################
 # RUN APP
 shinyApp(ui,server)
-rsconnect::deployApp()
+#rsconnect::deployApp()
