@@ -33,7 +33,11 @@ cs <- cs %>%
 ##############################################################################
 #UI
 ui <- fluidPage(
-  theme = bs_theme(version = 5, bootswatch = "minty"),
+  theme = bs_theme(
+    bg = "#8B4513",fg = "white", preimary = "#ffbe8f",
+    base_font = font_google("Space Mono"),
+    code_font = font_google("Space Mono")
+  ),
   
   navset_pill(
     id = "tab",
@@ -146,7 +150,7 @@ server <- function(input, output, session){
     p1 <- ggplot(accumulated_cs(),
            aes(x = academic_year, y = value, 
                color = gender, frame = frame_year)) +
-      geom_line(aes(group = gender), size = 1) +
+      geom_line(aes(group = gender), linewidth = 1) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
       scale_color_viridis_d(begin = 0.2, end = 0.8) +
@@ -172,4 +176,4 @@ server <- function(input, output, session){
 ##############################################################################
 # RUN APP
 shinyApp(ui,server)
-#rsconnect::deployApp()
+rsconnect::deployApp()
