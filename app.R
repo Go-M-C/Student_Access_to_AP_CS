@@ -28,8 +28,8 @@ cs <- cs %>%
 ui <- fluidPage(
   theme = bs_theme(
     bg = "white",fg = "#180e00", primary = "#ab9f7a",
-    base_font = font_google("Space Mono"),
-    code_font = font_google("Space Mono")
+    base_font = font_google("Open Sans"),
+    code_font = font_google("Open Sans")
   ),
   
   navset_pill(
@@ -101,14 +101,16 @@ ui <- fluidPage(
     nav_panel(
       "About",
       h3("About This Project"),
-      p("Created by Michelle Cui"),
+      p("Data Source"),
       p(
         a(
           "GitHub Repository",
           href = "https://github.com/Go-M-C/Student_Access_to_AP_CS",
           target = "_blank"
         )
-      )
+      ),
+      p("References"),
+      p("Michelle Cui"),
     )
   )
 )
