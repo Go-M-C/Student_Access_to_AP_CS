@@ -122,20 +122,30 @@ ui <- fluidPage(
 
 server <- function(input, output, session){
   
-  filtered_cs <- reactive({
-    cs %>% 
+  accumulated_cs <- reactive({
+    
+    req(input$gender_choice)
+    
+    df_ba <- cs %>% 
       filter(
         degree_level == input$degree_choice,
         gender %in% input$gender_choice)
+    
+    purrr::map_df(unique(df_ba$academic_year), function(yr){
+      df_ba %>% 
+        filter(academic_year <= yr) %>% 
+        mutate(frame_year = yr)
+    })
+    
   })
   
   # Output
   
   output$cs_trend_plot <- renderPlotly({
     
-    p1 <- ggplot(filtered_cs(),
+    p1 <- ggplot(accumulated_cs(),
            aes(x = academic_year, y = value, 
-               color = gender, frame = academic_year)) +
+               color = gender, frame = frame_year)) +
       geom_line(aes(group = gender), size = 1) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
