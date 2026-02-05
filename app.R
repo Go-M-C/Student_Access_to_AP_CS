@@ -37,6 +37,7 @@ ui <- fluidPage(
     
     nav_panel(
       "CS for All", 
+      
       fluidRow(
         column(width = 8, offset = 2,
                h2("Research Questions:"),
@@ -50,7 +51,7 @@ ui <- fluidPage(
                style = "text-align: center; margin-top:30px;",
 
                h4("Historical Context: animation of conferred bachelor's growth"),
-               img(src = gif_base64, 
+               tags$img(src = gif_base64, 
                    width = "100%", 
                    style = "max-width: 700px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"),
                p(tags$em("This project explores the equity access status of computer science(CS) in the U.S. from secondary participation to higher education Degrees"),
