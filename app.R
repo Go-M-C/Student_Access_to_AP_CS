@@ -50,7 +50,7 @@ ui <- fluidPage(
                ),
     
     nav_panel(
-      "The 50-Year Gender Gap in Computer Science",
+      "The 60-Year Gender Gap in Computer Science",
       
       sidebarLayout(
         sidebarPanel(
@@ -138,8 +138,9 @@ server <- function(input, output){
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
       scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
+      geom_vline(xintercept = 2016, linetype = "dashed", color = "red")
       labs(title = paste(
-          "National", tools::toTitleCase(input$degree_choice),
+          "United States", tools::toTitleCase(input$degree_choice),
           "Degree Trends"
         ),
         x = "Academic Year",
@@ -155,4 +156,4 @@ server <- function(input, output){
 ##############################################################################
 # RUN APP
 shinyApp(ui = ui,server = server)
-rsconnect::deployApp()
+#rsconnect::deployApp()
