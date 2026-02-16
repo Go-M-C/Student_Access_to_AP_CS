@@ -37,29 +37,17 @@ ui <- fluidPage(
     
     nav_panel(
       "Main", 
-      
-      fluidRow(
-        column(width = 8, offset = 2,
-               h2("Research Questions:"),
-               tags$ul(
-                 tags$li(h5("How have computer and information sciences degrees conferred in the U.S. changed over time by gender and degree level?")),
-                 tags$li(h5("Where does Oregon stand in the national CS degree landscape?")),
-                 tags$li(h5("What gender and racial disparities exist in participation in secondary-level computer science coursework nationwide?"))
+      # 
+      # fluidRow(
+      #   
+      #          h4("Historical Context: animation of conferred bachelor's growth"),
+      #          tags$img(src = gif_base64, 
+      #              width = "100%", 
+      #              style = "max-width: 700px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"),
+      #          p(tags$em("This project explores the equity access status of computer science(CS) in the U.S. from secondary participation to higher education Degrees"),
+      #            style = "margin-top: 10px; color: #666;")
+      #          )
                ),
-               hr(),
-               div(
-               style = "text-align: center; margin-top:30px;",
-
-               h4("Historical Context: animation of conferred bachelor's growth"),
-               tags$img(src = gif_base64, 
-                   width = "100%", 
-                   style = "max-width: 700px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"),
-               p(tags$em("This project explores the equity access status of computer science(CS) in the U.S. from secondary participation to higher education Degrees"),
-                 style = "margin-top: 10px; color: #666;")
-               )
-               )
-        )
-      ),
     
     nav_panel(
       "The 50-Year Gender Gap in Computer Science",
@@ -131,50 +119,34 @@ ui <- fluidPage(
 #############################################################################
 # SERVER
 
-server <- function(input, output, session){
+server <- function(input, output){
   
-  accumulated_cs <- reactive({
+  filtered_cs <- reactive({
     
-    req(input$gender_choice)
+    cs %>% 
+      filter(degree_level == input$degree_choice) %>% 
+      filter(gender %in% input$gender_choice)})
     
-    df_ba <- cs %>% 
-      filter(
-        degree_level == input$degree_choice,
-        gender %in% input$gender_choice)
-    
-    purrr::map_df(unique(df_ba$academic_year), function(yr){
-      df_ba %>% 
-        filter(academic_year <= yr) %>% 
-        mutate(frame_year = yr)
-    })
-    
-  })
-  
   # Output
   
   output$cs_trend_plot <- renderPlotly({
     
-    p1 <- ggplot(accumulated_cs(),
-           aes(x = academic_year, y = value, 
-               color = gender, frame = frame_year)) +
-      geom_line(aes(group = gender), linewidth = 1) +
+    p1 <- ggplot(filtered_cs(), 
+                 aes(x = academic_year, y = value,color = gender)) +
+      geom_line(size = 1) +
+      geom_point(alpha = 0.5) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
-      scale_color_viridis_d(begin = 0.2, end = 0.8) +
-      labs(
-        title = paste(
-          "CS", tools::toTitleCase(input$degree_choice),
-          "Degree by Gender (1965-2022)"
+      scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
+      labs(title = paste(
+          "National", tools::toTitleCase(input$degree_choice),
+          "Degree Trends"
         ),
-        x = "Year",
-        y = "Number of Degrees",
-        color = "Gender"
-      )+
+        x = "Academic Year",
+        y = "Number of Degrees") +
       theme_minimal()
     
-    ggplotly(p1) %>% 
-      animation_opts(frame = 100, transition = 0, redraw = FALSE) %>% 
-      animation_slider(currentvalue = list(prefix = "Year: "))
+    ggplotly(p1)
     
   })
 
