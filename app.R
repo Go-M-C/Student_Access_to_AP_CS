@@ -36,7 +36,7 @@ ui <- fluidPage(
     id = "tab",
     
     nav_panel(
-      "CS for All", 
+      "Main", 
       
       fluidRow(
         column(width = 8, offset = 2,
@@ -62,7 +62,7 @@ ui <- fluidPage(
       ),
     
     nav_panel(
-      "CS Degree Trends",
+      "The 50-Year Gender Gap in Computer Science",
       
       sidebarLayout(
         sidebarPanel(
@@ -90,14 +90,18 @@ ui <- fluidPage(
 )
 )
 ),
+
+    nav_panel(
+      "Oregon Landscape", 
+      h2("Use OLDC/CS for Oregon data to show the teacher-student gap")),
     
     nav_panel(
-      "CS Degrees by State", 
-      h2("State Map")),
-    
+      "The High School Pipeline",
+      h2("Use CRDC data to show AP enrollment disparities")),
+
     nav_panel(
-      "National AP CS Participation",
-      h2("Treemap")),
+      "Policy Impact"
+    ),
     
     nav_panel(
       "About",
