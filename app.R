@@ -155,4 +155,4 @@ server <- function(input, output){
 ##############################################################################
 # RUN APP
 shinyApp(ui = ui,server = server)
-#rsconnect::deployApp()
+rsconnect::deployApp()
