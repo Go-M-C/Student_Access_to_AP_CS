@@ -7,7 +7,8 @@ library(gifski)
 library(janitor)
 
 
-# Data clean and wrangling
+# Data clean and wrangling to build a clean longitudinal state-level dataset
+# of CS bachelor's degrees from 2012-13 through 2021-22. 
 
 ## Import NCES data for 
 ## conferred bachelor degree by postsecondary institutions
@@ -133,3 +134,46 @@ cs_ba_2021 <- clean_cs_data(
   year_label = "2021-22",
   skip_rows = 1
 )
+
+## Combine all years
+cs_ba_all <- bind_rows(
+  cs_ba_2012,
+  cs_ba_2013,
+  cs_ba_2014,
+  cs_ba_2015,
+  cs_ba_2016,
+  cs_ba_2017,
+  cs_ba_2018,
+  cs_ba_2019,
+  cs_ba_2020,
+  cs_ba_2021
+)
+
+## Keep only states and DC for National trend analysis and mapping
+#cs_ba_all %>% 
+  #count(academic_year)
+
+cs_ba_all <- cs_ba_all %>% 
+  filter(state != "U.S. Service Academies")
+
+juristictions <- c(
+  "American Samoa",
+  "Guam",
+  "Northern Marianas",
+  "Puerto Rico",
+  "U.S. Virgin Islands",
+  "Palau",
+  "Marshall Islands",
+  "Federated States of Micronesia"
+)
+
+cs_ba_states <- cs_ba_all %>% 
+  filter(!state %in% juristictions)
+
+cs_ba_states %>% 
+  count(academic_year)
+
+## National trend analysis
+## Choronical mapping
+## Fixed effects regression
+## Difference-in-differences 
