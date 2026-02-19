@@ -7,6 +7,58 @@ library(gifski)
 library(janitor)
 
 
+cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
+
+national_clean <- cs_ba_national %>% 
+  filter(!is.na(State), State != "Total") %>% 
+  filter(!is.na(Total)) %>% 
+  mutate(
+    year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
+  ) %>% 
+  mutate(
+    Total = as.numeric(Total),
+    Male = as.numeric(Male),
+    Female = as.numeric(Female)
+  )
+
+## Verify sums
+# national_clean %>%
+#   mutate(check = Male + Female - Total) %>%
+#   summarise(max_diff = max(abs(check), na.rm = TRUE))
+
+## Verify state number
+# national_clean %>% 
+#   group_by(year) %>% 
+#   summarise(n_states = n_distinct(State)) %>% 
+#   arrange(year)
+
+us_total <- national_clean %>% 
+  group_by(year) %>% 
+  summarise(
+    Total = sum(Total),
+    Male = sum(Male),
+    Female = sum(Female),
+    State = "United States"
+  )
+
+
+national_clean <- bind_rows(national_clean, us_total)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###########################################################################
+
 # Data clean and wrangling to build a clean longitudinal state-level dataset
 # of CS bachelor's degrees from 2012-13 through 2021-22. 
 
@@ -186,3 +238,7 @@ library(janitor)
 ## Choronical mapping
 ## Fixed effects regression
 ## Difference-in-differences 
+
+
+
+
