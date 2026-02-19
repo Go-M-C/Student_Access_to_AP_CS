@@ -5,7 +5,7 @@ library(readxl)
 library(gganimate)
 library(gifski)
 library(janitor)
-
+library(maps)
 
 cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
 
@@ -44,15 +44,36 @@ us_total <- national_clean %>%
 
 national_clean <- bind_rows(national_clean, us_total)
 
+cs_latest <- national_clean %>% 
+  filter(year == 2022) %>% 
+  mutate(State = tolower(State)) # match with map data
 
+# Get U.S. map data
+us_states <- map_data("state")
 
+cs_map <- us_states %>% 
+  left_join(cs_latest, by = c("region" = "State"))
 
+p2 <- ggplot(cs_map, aes(x = long, y = lat, group = group, fill = Total)) +
+  geom_polygon(color = "white") +
+  geom_polygon(data = subset(cs_map, region == "oregon"),
+               aes(x = long, y = lat),
+               fill = "lightgreen", color = "black") +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey70") +
+  coord_fixed(1.3) +
+  labs(
+    title = "CS Bachelor's Degrees by State (2022)",
+    fill = "Number of Awarded Degrees",
+    caption = "SOURCE: U.S. Department of Education, 
+    National Center for Education Statistics, 
+    Integrated Postsecondary Education Data System (IPEDS), 
+    Completions component final data (2001-02 - 2022-23) 
+    and provisional data (2023-24)."
+  ) +
+  theme_minimal()
+  
 
-
-
-
-
-
+p2
 
 
 
