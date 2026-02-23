@@ -14,16 +14,6 @@ library(purrr)
 # library(base64enc)
 # gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
 
-# loading data
-cs <- read.csv(here("data","cs_degree_clean.csv"))
-cs <- cs %>% 
-  mutate(
-    degree_level = factor(degree_level,
-                          levels = c("bachelor","master","doctor")),
-    gender = factor(gender,
-                    levels = c("male","female"),
-                    labels = c("Male","Female"))
-  )
 
 
 ##############################################################################
@@ -66,150 +56,157 @@ ui <- page_sidebar(
       base_font = font_google("Open Sans"),
       code_font = font_google("Open Sans")
       ),
-    
+   #==========================SIDEBAR=========================# 
     sidebar = sidebar(
       
       navset_tab(
       id = "tabs",
-      
+
       nav_panel(
         title = tagList(icon("house"), " Welcome"),
-        value = "welcome"),
+        value = "welcome",
+        ),
+      
       nav_panel(
         title = tagList(icon("map"), " Access"),
-        value = "access"),
+        value = "access",
+        ),
+      
       nav_panel(
         title = tagList(icon("graduation-cap"), " Degrees"),
-        value = "degrees"),
+        value = "degrees",
+        ),
+
       nav_panel(
         title = tagList(icon("chart-line"), " Trends"),
-        value = "trends")
+        value = "trends") # trends nav_panel ends
+        ) # navset_tab ends
+    ),
+  
+  # ========================== MAIN CONTENT============================#
+      uiOutput("main_content")
     )
-  ),
-  
-  uiOutput("main_content")
-)
-  
-
-# navset_pill(
-#     id = "tab",
-#     
-#     nav_panel(
-#       "Main", 
-#       # 
-#       # fluidRow(
-#       #   
-#       #          h4("Historical Context: animation of conferred bachelor's growth"),
-#       #          tags$img(src = gif_base64, 
-#       #              width = "100%", 
-#       #              style = "max-width: 700px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"),
-#       #          p(tags$em("This project explores the equity access status of computer science(CS) in the U.S. from secondary participation to higher education Degrees"),
-#       #            style = "margin-top: 10px; color: #666;")
-#       #          )
-#                ),
-#     
-#     nav_panel(
-#       "The 60-Year Gender Gap in Computer Science",
-#       
-#       sidebarLayout(
-#         sidebarPanel(
-#           selectInput(
-#             inputId = "degree_choice",
-#             label   = "Select Degree Level",
-#             choices = c(
-#               "Bachelor's" = "bachelor",
-#               "Master's"   = "master",
-#               "Doctor's"   = "doctor"
-#             ),
-#             selected = "bachelor"
-#           ),
-#           
-#           checkboxGroupInput(
-#             inputId = "gender_choice",
-#             label = "Select Gender",
-#             choices = c("Male", "Female"),
-#             selected = c("Male", "Female")
-#           )
-#         ),
-#         
-#         mainPanel(
-#           plotlyOutput("cs_trend_plot", height = "550px")
-# )
-# )
-# ),
-# 
-#     nav_panel(
-#       "Oregon Landscape", 
-#       h2("Use OLDC/CS for Oregon data to show the teacher-student gap")),
-#     
-#     nav_panel(
-#       "The High School Pipeline",
-#       h2("Use CRDC data to show AP enrollment disparities")),
-# 
-#     nav_panel(
-#       "Policy Impact"
-#     ),
-#     
-#     nav_panel(
-#       "About",
-#       h3("About This Project"),
-#       p("Data Source"),
-#       p(
-#         a(
-#           "Overview of Computer Science Implementation Plan",
-#           href = "https://www.oregon.gov/ode/schools-and-districts/grants/Pages/Computer-Science-Implementation-Plan.aspx",
-#           target = "_blank"
-#         )
-#       ),
-#       p(
-#         a(
-#           "GitHub Repository",
-#           href = "https://github.com/Go-M-C/Student_Access_to_AP_CS",
-#           target = "_blank"
-#         )
-#       ),
-#       p("References"),
-#       p("Michelle Cui"),
-#     )
-#   )
-# )
-
 
 #############################################################################
 # SERVER
 
 server <- function(input, output){
   
-  # filtered_cs <- reactive({
-  #   
-  #   cs %>% 
-  #     filter(degree_level == input$degree_choice) %>% 
-  #     filter(gender %in% input$gender_choice)})
-  #   
-  # # Output
-  # 
-  # output$cs_trend_plot <- renderPlotly({
-  #   
-  #   p1 <- ggplot(filtered_cs(), 
-  #                aes(x = academic_year, y = value,color = gender)) +
-  #     geom_line(size = 1) +
-  #     geom_point(alpha = 0.5) +
-  #     scale_y_continuous(labels = scales::comma) +
-  #     scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
-  #     scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
-  #     geom_vline(xintercept = 2016, linetype = "dashed", color = "red")
-  #     labs(title = paste(
-  #         "United States", tools::toTitleCase(input$degree_choice),
-  #         "Degree Trends"
-  #       ),
-  #       x = "Academic Year",
-  #       y = "Number of Degrees") +
-  #     theme_minimal()
-  #   
-  #   ggplotly(p1)
-  #   
-  # })
+  output$main_content <- renderUI({
+    switch(input$tabs,
+           "welcome" = fluidPage(
+             h2("Welcome"),
+             br(),
+             p("This interactive dashboard brings together 
+               multiple public data source, 
+               including the Civil Rights Data Collection and 
+               the National Center for Educational Statistics, 
+               and CODE.org to provide a data-informed picture of 
+               computer science participation and degree attainment in Oregon."),
+             p("Use the sidebar to navigate through national trends,
+               Oregon's landscape, and policy impact.")
+           ),
+           "access" = fluidPage(
+             h2("Advanced Placement Computer Science Course Enrollment Across the U.S."),
+             plotlyOutput("ap_cs_map"),
+             plotlyOutput("ac_cs_treemap"),
+             p("Circle size represnets enrollment. 
+               Treemap shows aggregated enrollment by group")
+           ),
+           "degrees" = fluidPage(
+             h2("Conferred CS Bachelor Degrees"),
+             plotlyOutput("cs_ba_map"),
+             p("Oregon highlighted relative to national totals.")
+           ),
+           "trends" = fluidPage(
+             h2("National and Oregon Trends"),
+             fluidRow(
+               column(
+                 width = 10,
+                 plotlyOutput("cs_trend_plot", height = "550px")
+               ),
+               column(
+                 width = 2,
+                 selectInput(
+                   inputId = "degree_choice",
+                   label = "Select Degree Level",
+                   choices = c(
+                     "Bachelor's" = "bachelor",
+                     "Master's" = "master",
+                     "Doctor's" = "doctor"
+                   ),
+                   selected = "bachelor"
+                 ),
+                 checkboxGroupInput(
+                   inputId = "gender_choice",
+                   label = "Select Gender",
+                   choices = c("Male", "Female"),
+                   selected = c("Male", "Female")
+                 ),
+                 br(),
+                 p("This plot shows longitudinal trends of computer science degrees by gender across the U.S."),
+                 p("The vertical dashed grey line indicates 2016, the year AP Computer Science Principles was introduced."),
+                 p("The vertical dashed red line indicates 2020, the year COVID-19 started.")
+               )
+             )
+           )
+           )
+  })
+  
 
+############################## TRENDS PLOT ##############################
+  cs <- read.csv(here("data","cs_degree_clean.csv"))
+  cs <- cs %>% 
+    mutate(
+      degree_level = factor(degree_level,
+                            levels = c("bachelor","master","doctor")),
+      gender = factor(gender,
+                      levels = c("male","female"),
+                      labels = c("Male","Female"))
+    )
+  
+   filtered_cs <- reactive({
+
+    cs %>%
+      filter(degree_level == input$degree_choice) %>%
+      filter(gender %in% input$gender_choice)})
+
+  # trends(output)
+
+  output$cs_trend_plot <- renderPlotly({
+
+    p1 <- ggplot(filtered_cs(),
+                 aes(x = academic_year, y = value,color = gender)) +
+      geom_line(size = 1) +
+      geom_point(alpha = 0.5) +
+      scale_y_continuous(labels = scales::comma) +
+      scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
+      scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
+      geom_vline(xintercept = 2016, linetype = "dashed", color = "grey70")+
+      geom_vline(xintercept = 2020, linetype = "dashed", color = "red")+
+      annotate("text", x = 2016, y = max(filtered_cs()$value),
+               label = "AP Computer Science Principle introduced", 
+               angle = 90, vjust = -0.5, color = "grey50")+
+      labs(title = paste(
+          "United States", tools::toTitleCase(input$degree_choice),
+          "Degree Trends"
+        ),
+        x = "Academic Year",
+        y = "Number of Degrees") +
+      theme_minimal()
+
+    ggplotly(p1)
+  })
+######################### trends end here###########################
+  
+  
+  
+  
+  
+  
+  
+  
+  
 }
 
 ##############################################################################
