@@ -5,7 +5,9 @@ library(readxl)
 library(gganimate)
 library(gifski)
 library(janitor)
-library(maps)
+library(sf)
+library(tigris)
+options(tigris_use_cache = TRUE) 
 
 cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
 
@@ -29,6 +31,33 @@ cs_state_long <- national_clean %>%
   mutate(gender = factor(gender,
                          levels = c("Total", "Male","Female"),
                          labels = c("Total", "Male", "Female")))
+
+us_states <- states(cb = TRUE)
+
+selected_year <- 2017
+selected_gender <- "Female"
+
+cs_map_data <- us_states %>% 
+  left_join(
+    cs_state_long %>% 
+      filter(year == selected_year,
+             gender == selected_gender) %>% 
+      select(State,degrees),
+    by = c("NAME" = "State")
+  )
+
+
+
+cs_map_data %>%
+  ggplot() +
+  geom_sf(aes(fill = degrees), color = "white") +
+  scale_fill_viridis_c(option = "C", na.value = "grey90")+
+  coord_sf(xlim = c(-125, -65), ylim = c(25, 50)) +
+  theme_minimal() +
+  labs(title = paste("CS Bachelor's Degrees in", selected_year),
+       size = "Degrees")
+
+
 
 # ## Verify sums
 # # national_clean %>%
