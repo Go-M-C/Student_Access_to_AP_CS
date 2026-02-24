@@ -21,59 +21,65 @@ national_clean <- cs_ba_national %>%
     Female = as.numeric(Female)
   )
 
-## Verify sums
-# national_clean %>%
-#   mutate(check = Male + Female - Total) %>%
-#   summarise(max_diff = max(abs(check), na.rm = TRUE))
+cs_state_long <- national_clean %>% 
+  pivot_longer(
+    cols = c(Total, Male, Female),
+    names_to = "gender",
+    values_to = "degrees") %>% 
+  mutate(gender = factor(gender,
+                         levels = c("Total", "Male","Female"),
+                         labels = c("Total", "Male", "Female")))
 
-## Verify state number
-# national_clean %>% 
+# ## Verify sums
+# # national_clean %>%
+# #   mutate(check = Male + Female - Total) %>%
+# #   summarise(max_diff = max(abs(check), na.rm = TRUE))
+# 
+# ## Verify state number
+# # national_clean %>% 
+# #   group_by(year) %>% 
+# #   summarise(n_states = n_distinct(State)) %>% 
+# #   arrange(year)
+# 
+# us_total <- national_clean %>% 
 #   group_by(year) %>% 
-#   summarise(n_states = n_distinct(State)) %>% 
-#   arrange(year)
-
-us_total <- national_clean %>% 
-  group_by(year) %>% 
-  summarise(
-    Total = sum(Total),
-    Male = sum(Male),
-    Female = sum(Female),
-    State = "United States"
-  )
-
-
-national_clean <- bind_rows(national_clean, us_total)
-
-cs_latest <- national_clean %>% 
-  filter(year == 2022) %>% 
-  mutate(State = tolower(State)) # match with map data
-
-# Get U.S. map data
-us_states <- map_data("state")
-
-cs_map <- us_states %>% 
-  left_join(cs_latest, by = c("region" = "State"))
-
-p2 <- ggplot(cs_map, aes(x = long, y = lat, group = group, fill = Total)) +
-  geom_polygon(color = "white") +
-  geom_polygon(data = subset(cs_map, region == "oregon"),
-               aes(x = long, y = lat),
-               fill = "lightgreen", color = "black") +
-  scale_fill_viridis_c(option = "plasma", na.value = "grey70") +
-  coord_fixed(1.3) +
-  labs(
-    title = "CS Bachelor's Degrees by State (2022)",
-    fill = "Number of Awarded Degrees",
-    caption = "SOURCE: U.S. Department of Education, 
-    National Center for Education Statistics, 
-    Integrated Postsecondary Education Data System (IPEDS), 
-    Completions component final data (2001-02 - 2022-23) 
-    and provisional data (2023-24)."
-  ) +
-  theme_minimal()
-  
-
-p2
+#   summarise(
+#     Total = sum(Total),
+#     Male = sum(Male),
+#     Female = sum(Female),
+#     State = "United States"
+#   )
+# 
+# 
+# national_clean <- bind_rows(national_clean, us_total)
+# 
+# cs_latest <- national_clean %>% 
+#   filter(year == 2022) %>% 
+#   mutate(State = tolower(State)) # match with map data
+# 
+# # Get U.S. map data
+# us_states <- map_data("state")
+# 
+# cs_map <- us_states %>% 
+#   left_join(cs_latest, by = c("region" = "State"))
+# 
+# p2 <- ggplot(cs_map, aes(x = long, y = lat, group = group, fill = Total)) +
+#   geom_polygon(color = "white") +
+#   scale_fill_viridis_c(option = "plasma", na.value = "grey70") +
+#   coord_fixed(1.3) +
+#   labs(
+#     title = "CS Bachelor's Degrees by State (2022)",
+#     fill = "Number of Awarded Degrees",
+#     caption = "SOURCE: U.S. Department of Education, 
+#     National Center for Education Statistics, 
+#     Integrated Postsecondary Education Data System (IPEDS), 
+#     Completions component final data (2001-02 - 2022-23) 
+#     and provisional data (2023-24)."
+#   ) +
+#   theme_minimal()
+#   
+# 
+# p2
 
 
 
