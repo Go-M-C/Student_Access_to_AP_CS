@@ -47,7 +47,6 @@ cs_map_data <- us_states %>%
   )
 
 
-
 cs_map_data %>%
   ggplot() +
   geom_sf(aes(fill = degrees), color = "white") +

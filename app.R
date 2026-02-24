@@ -10,7 +10,15 @@ library(scales)
 library(here)
 library(plotly)
 library(purrr)
-
+library(tidyr)
+library(tidyverse)
+library(readxl)
+library(gganimate)
+library(gifski)
+library(janitor)
+library(sf)
+library(tigris)
+options(tigris_use_cache = TRUE) # save the shapefiles downloads locally
 # library(base64enc)
 # gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
 
@@ -123,6 +131,7 @@ server <- function(input, output){
              p("Use the sidebar to navigate through national trends,
                Oregon's landscape, and policy impact.")
            ),
+           
            "access" = fluidPage(
              h2("Advanced Placement Computer Science Course Enrollment Across the U.S."),
              plotlyOutput("ap_cs_map"),
@@ -130,11 +139,36 @@ server <- function(input, output){
              p("Circle size represnets enrollment. 
                Treemap shows aggregated enrollment by group")
            ),
+     #=====================================================================#      
            "degrees" = fluidPage(
              h2("Conferred CS Bachelor Degrees"),
-             plotlyOutput("cs_ba_map"),
-             p("Oregon highlighted relative to national totals.")
+             
+             fluidRow(
+               column(
+                 width = 10,
+                 plotlyOutput("cs_ba_map", height = "550px")
+               ),
+               column(
+                 width = 2,
+                 selectInput(
+                   inputId = "year_choice",
+                   label = "Select Year",
+                   choices = sort(unique(cs_state_long$year)),
+                   selected = max(cs_state_long$year)
+                 ),
+                 checkboxGroupInput(
+                   inputId = "degree_gender_choice",
+                   label = "Select Gender",
+                   choices = c("male","female"),
+                   selected = c("male","female")
+               )
+               )
+             ),
+             
+             br(),
+             p("Oregon relative to national averages.")
            ),
+     #==============================================================#      
            "trends" = fluidPage(
              h2("National and Oregon Trends"),
              fluidRow(
@@ -155,7 +189,7 @@ server <- function(input, output){
                    selected = "bachelor"
                  ),
                  checkboxGroupInput(
-                   inputId = "gender_choice",
+                   inputId = "trend_gender_choice",
                    label = "Select Gender",
                    choices = c("Male", "Female"),
                    selected = c("Male", "Female")
@@ -168,6 +202,68 @@ server <- function(input, output){
              )
            )
            )
+  })
+
+############################## ACCESS PLOT ##############################
+  
+  
+  
+############################## DEGREE PLOT ##############################
+  
+  cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
+  
+  national_clean <- cs_ba_national %>% 
+    filter(!is.na(State), State != "Total") %>% 
+    filter(!is.na(Total)) %>% 
+    mutate(
+      year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
+    ) %>% 
+    mutate(
+      Total = as.numeric(Total),
+      Male = as.numeric(Male),
+      Female = as.numeric(Female)
+    ) %>% 
+    clean_names()
+  
+  cs_state_long <- national_clean %>% 
+    pivot_longer(
+      cols = c(total, male, female),
+      names_to = "gender",
+      values_to = "degrees") %>% 
+    mutate(gender = factor(gender,
+                           levels = c("total", "male","female"),
+                           labels = c("total", "male", "female")))
+  
+
+  us_states <- states(cb = TRUE)
+  
+  filtered_state <- reactive({
+    cs_state_long %>% 
+      filter(year == as.numeric(input$year_choice),
+             gender %in% input$degree_gender_choice) %>% 
+      group_by(state) %>% 
+      summarise(degrees = sum(degrees, na.rm = TRUE))
+  })
+  
+  cs_map_data <- reactive({
+    us_states %>% 
+      left_join(filtered_state(), by = c("NAME" = "state"))
+    
+  })
+  # degree(output)
+  output$cs_ba_map <- renderPlotly({
+    
+    p2 <- ggplot(cs_map_data()) +
+      geom_sf(aes(fill = degrees), color = "white") +
+      scale_fill_viridis_c(option = "E", trans = "sqrt") +
+      coord_sf(xlim = c(-125,-65), ylim = c(25, 50)) +
+      theme_minimal() +
+      theme(panel.background = element_rect(fill = "transparent", color = NA),
+            plot.background = element_rect(fill = "transparent", color = NA)) +
+      labs(fill = "CS BA Degrees",
+           title = paste("CS Bachelor Degrees in", input$year_choice))
+    
+    ggplotly(p2)
   })
   
 
@@ -186,7 +282,7 @@ server <- function(input, output){
 
     cs %>%
       filter(degree_level == input$degree_choice) %>%
-      filter(gender %in% input$gender_choice)})
+      filter(gender %in% input$trend_gender_choice)})
 
   # trends(output)
 
@@ -214,15 +310,9 @@ server <- function(input, output){
 
     ggplotly(p1)
   })
-######################### trends end here###########################
+######################### TRENDS ENDS ###########################
   
-  
-  
-  
-  
-  
-  
-  
+
   
 }
 
