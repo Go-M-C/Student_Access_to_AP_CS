@@ -97,12 +97,29 @@ server <- function(input, output){
            "welcome" = fluidPage(
              h2("Welcome"),
              br(),
-             p("This interactive dashboard brings together 
-               multiple public data source, 
-               including the Civil Rights Data Collection and 
-               the National Center for Educational Statistics, 
-               and CODE.org to provide a data-informed picture of 
-               computer science participation and degree attainment in Oregon."),
+             p("By 2026, the Computer Science for All initiative will reach its 
+               10-year milestone since its launch in the United States. 
+               The initiative marked a proactive move and a commitment 
+               to expanding Computer Science (CS) education 
+               from kindergarten through high school, 
+               aiming to equip students with computational thinking (CT) skills 
+               for participation in a fast-shifting and technology-driven economy."),
+             br(),
+             p("In Oregon, the Oregon Department of Education (ODE) 
+               and the Higher Education Coordination Commission (HECC) 
+               initiated a statewide implementation plan in 2022 to expand access 
+               to CS education for all public-school students by the 2027-2028 academic year. 
+               For school district leaders and educators, this raises important questions:"),
+             br(),
+             p("-Who is currently participating in computer science courses?"),
+             p("-Are participation patterns changing over time?"),
+             p("-What does Oregon’s CS education ecosystem look like?"),
+             br(),
+             p("This interactive dashboard intends to provide a data-informed picture of 
+               computer science participation and degree attainment in Oregon by bringing together 
+               multiple public data source, including the Civil Rights Data Collection and 
+               the National Center for Educational Statistics, and CODE.org."),
+             br(),
              p("Use the sidebar to navigate through national trends,
                Oregon's landscape, and policy impact.")
            ),
