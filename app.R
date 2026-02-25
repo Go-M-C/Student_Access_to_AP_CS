@@ -24,6 +24,53 @@ options(tigris_use_cache = TRUE) # save the shapefiles downloads locally
 
 
 
+
+##############################################################################
+
+
+
+
+#================DEGREE DATA==================#
+
+cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
+
+national_clean <- cs_ba_national %>% 
+  filter(!is.na(State), State != "Total") %>% 
+  filter(!is.na(Total)) %>% 
+  mutate(
+    year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
+  ) %>% 
+  mutate(
+    Total = as.numeric(Total),
+    Male = as.numeric(Male),
+    Female = as.numeric(Female)
+  ) %>% 
+  clean_names()
+
+cs_state_long <- national_clean %>% 
+  pivot_longer(
+    cols = c(total, male, female),
+    names_to = "gender",
+    values_to = "degrees") %>% 
+  mutate(gender = factor(gender,
+                         levels = c("total", "male","female"),
+                         labels = c("total", "male", "female")))
+
+
+us_states <- states(cb = TRUE)
+
+#================TRENDS DATA==================#
+cs <- read.csv(here("data","cs_degree_clean.csv"))
+cs <- cs %>% 
+  mutate(
+    degree_level = factor(degree_level,
+                          levels = c("bachelor","master","doctor")),
+    gender = factor(gender,
+                    levels = c("male","female"),
+                    labels = c("Male","Female"))
+  )
+
+
 ##############################################################################
 #UI
 ui <- page_sidebar(
@@ -210,32 +257,6 @@ server <- function(input, output){
   
 ############################## DEGREE PLOT ##############################
   
-  cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
-  
-  national_clean <- cs_ba_national %>% 
-    filter(!is.na(State), State != "Total") %>% 
-    filter(!is.na(Total)) %>% 
-    mutate(
-      year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
-    ) %>% 
-    mutate(
-      Total = as.numeric(Total),
-      Male = as.numeric(Male),
-      Female = as.numeric(Female)
-    ) %>% 
-    clean_names()
-  
-  cs_state_long <- national_clean %>% 
-    pivot_longer(
-      cols = c(total, male, female),
-      names_to = "gender",
-      values_to = "degrees") %>% 
-    mutate(gender = factor(gender,
-                           levels = c("total", "male","female"),
-                           labels = c("total", "male", "female")))
-  
-
-  us_states <- states(cb = TRUE)
   
   filtered_state <- reactive({
     cs_state_long %>% 
@@ -268,15 +289,6 @@ server <- function(input, output){
   
 
 ############################## TRENDS PLOT ##############################
-  cs <- read.csv(here("data","cs_degree_clean.csv"))
-  cs <- cs %>% 
-    mutate(
-      degree_level = factor(degree_level,
-                            levels = c("bachelor","master","doctor")),
-      gender = factor(gender,
-                      levels = c("male","female"),
-                      labels = c("Male","Female"))
-    )
   
    filtered_cs <- reactive({
 
