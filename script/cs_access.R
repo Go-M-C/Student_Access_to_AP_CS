@@ -19,3 +19,4 @@ library(dplyr)
       district_match = str_to_lower(str_trim(districtname))
     )
     
+saveRDS(or_cs_eco_2122, "data/or_cs_eco_2122.rds")
