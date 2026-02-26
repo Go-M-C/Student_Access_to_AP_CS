@@ -22,236 +22,212 @@ options(tigris_use_cache = TRUE) # save the shapefiles downloads locally
 # library(base64enc)
 # gif_base64 <- dataURI(file = here("www:", "cs_ba_anim.gif"), mime = "image/gif")
 
+oregon_shape <- states(cb = TRUE, resolution = "20m") %>% 
+  filter(NAME == "Oregon") %>% 
+  st_transform(4326)
+
+##########################DATA LOADING################################
+
+part_202021 <- readRDS("data/or_apcs_202021.rds")
+eco_202122 <- readRDS("data/or_cs_eco_2122.rds")
+nat_deg <- readRDS("data/nat_degrees_long.rds")
+nat_trend <- readRDS("data/nat_cs_trends.rds")
 
 
+########################## UI DESIGN ##################################
 
-##############################################################################
-
-
-
-
-#================DEGREE DATA==================#
-
-cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
-
-national_clean <- cs_ba_national %>% 
-  filter(!is.na(State), State != "Total") %>% 
-  filter(!is.na(Total)) %>% 
-  mutate(
-    year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
-  ) %>% 
-  mutate(
-    Total = as.numeric(Total),
-    Male = as.numeric(Male),
-    Female = as.numeric(Female)
-  ) %>% 
-  clean_names()
-
-cs_state_long <- national_clean %>% 
-  pivot_longer(
-    cols = c(total, male, female),
-    names_to = "gender",
-    values_to = "degrees") %>% 
-  mutate(gender = factor(gender,
-                         levels = c("total", "male","female"),
-                         labels = c("total", "male", "female")))
-
-
-us_states <- states(cb = TRUE)
-
-#================TRENDS DATA==================#
-cs <- read.csv(here("data","cs_degree_clean.csv"))
-cs <- cs %>% 
-  mutate(
-    degree_level = factor(degree_level,
-                          levels = c("bachelor","master","doctor")),
-    gender = factor(gender,
-                    levels = c("male","female"),
-                    labels = c("Male","Female"))
-  )
-
-
-##############################################################################
-#UI
-ui <- page_sidebar(
+ui <- page_navbar(
   
   title = div(
-    style = "width:100%; display:flex; 
-    justify-content:space-between; align-items:center;",
-    
-    div(
-      style = "line-height:1.2; flex:1;",
-      h3("Data Science Capstone"),
-      tags$small("Computer Science Education Trends in Oregon")
-      ),
-    tags$a(
-      href = "https://github.com/Go-M-C/Student_Access_to_AP_CS",
-      target = "_blank",
-      icon("github",style = "font-size:22px; color: #180d00;"),
-    )
-  ),
-  
-    tags$style(HTML("
-    .nav-tabs .nav-link {
-      border: none !important;
-      color: #180e00;
-      }
-      
-      .nav-tabs .nav-link.active{
-      color: #ab9f7a !important;
-      font-weight: 600;
-      background-color: transparent !important;
-      }
-      ")),
-
-    theme = bs_theme(
-      bg = "white",
-      fg = "#180e00", 
-      primary = "#ab9f7a",
-      base_font = font_google("Open Sans"),
-      code_font = font_google("Open Sans")
-      ),
-   #==========================SIDEBAR=========================# 
-    sidebar = sidebar(
-      
-      navset_tab(
-      id = "tabs",
-
-      nav_panel(
-        title = tagList(icon("house"), " Welcome"),
-        value = "welcome",
-        ),
-      
-      nav_panel(
-        title = tagList(icon("map"), " Access"),
-        value = "access",
-        ),
-      
-      nav_panel(
-        title = tagList(icon("graduation-cap"), " Degrees"),
-        value = "degrees",
-        ),
-
-      nav_panel(
-        title = tagList(icon("chart-line"), " Trends"),
-        value = "trends") # trends nav_panel ends
-        ) # navset_tab ends
+    style = "display: flex; flex-direction:column; justify-content:center; line-height:1.2;",
+    span("DATA SCIENCE CAPSTONE PROJECT",
+         style = "font-size: 20px; font-weight: 800; color: #180d00;letter-spacing:0.5px;"),
+    span("Oregon Computer Science Education Overview",
+         style = "font-size: 16px; font-weight: 400; color: #6c757d; margin-top: -2px;")
     ),
   
-  # ========================== MAIN CONTENT============================#
-      uiOutput("main_content")
-    )
-
-#############################################################################
-# SERVER
-
-server <- function(input, output){
   
-  output$main_content <- renderUI({
-    switch(input$tabs,
-           "welcome" = fluidPage(
-             h2("Welcome"),
-             br(),
-             p("By 2026, the Computer Science for All initiative will reach its 
+  theme = bs_theme(
+    version = 5,
+    primary = "#ab9f7a", 
+    "nav-link-font-size" = "15px"),
+  
+  # WELCOME PAGE
+  
+  nav_panel("Welcome", icon = icon("house"),
+            fluidPage(
+            h2("Project Overview"),
+            p("By 2026, the Computer Science for All initiative will reach its 
                10-year milestone since its launch in the United States. 
                The initiative marked a proactive move and a commitment 
                to expanding Computer Science (CS) education 
                from kindergarten through high school, 
                aiming to equip students with computational thinking (CT) skills 
                for participation in a fast-shifting and technology-driven economy."),
-             br(),
-             p("In Oregon, the Oregon Department of Education (ODE) 
+            br(),
+            p("In 2022, Oregon Department of Education (ODE) 
                and the Higher Education Coordination Commission (HECC) 
-               initiated a statewide implementation plan in 2022 to expand access 
+               initiated a statewide implementation plan to expand access 
                to CS education for all public-school students by the 2027-2028 academic year. 
                For school district leaders and educators, this raises important questions:"),
-             br(),
-             p("-Who is currently participating in computer science courses?"),
-             p("-Are participation patterns changing over time?"),
-             p("-What does Oregon’s CS education ecosystem look like?"),
-             br(),
-             p("This interactive dashboard intends to provide a data-informed picture of 
+            br(),
+            p("-Who is currently participating in computer science courses?"),
+            p("-Are participation patterns changing over time?"),
+            p("-What does Oregon’s overall CS education ecosystem look like?"),
+            br(),
+            p("This interactive dashboard intends to provide a data-informed picture of 
                computer science participation and degree attainment in Oregon by bringing together 
                multiple public data source, including the Civil Rights Data Collection and 
                the National Center for Educational Statistics, and CODE.org."),
-             br(),
-             p("Use the sidebar to navigate through national trends,
+            br(),
+            p("Use the sidebar to navigate through national trends,
                Oregon's landscape, and policy impact.")
-           ),
-           
-           "access" = fluidPage(
-             h2("Advanced Placement Computer Science Course Enrollment Across the U.S."),
-             plotlyOutput("ap_cs_map"),
-             plotlyOutput("ac_cs_treemap"),
-             p("Circle size represnets enrollment. 
-               Treemap shows aggregated enrollment by group")
-           ),
-     #=====================================================================#      
-           "degrees" = fluidPage(
-             h2("Conferred CS Bachelor Degrees"),
-             
-             fluidRow(
-               column(
-                 width = 10,
-                 plotlyOutput("cs_ba_map", height = "550px")
-               ),
-               column(
-                 width = 2,
-                 selectInput(
-                   inputId = "year_choice",
-                   label = "Select Year",
-                   choices = sort(unique(cs_state_long$year)),
-                   selected = max(cs_state_long$year)
-                 ),
-                 checkboxGroupInput(
-                   inputId = "degree_gender_choice",
-                   label = "Select Gender",
-                   choices = c("male","female"),
-                   selected = c("male","female")
-               )
-               )
-             ),
-             
-             br(),
-             p("Oregon relative to national averages.")
-           ),
-     #==============================================================#      
-           "trends" = fluidPage(
-             h2("National and Oregon Trends"),
-             fluidRow(
-               column(
-                 width = 10,
-                 plotlyOutput("cs_trend_plot", height = "550px")
-               ),
-               column(
-                 width = 2,
-                 selectInput(
-                   inputId = "degree_choice",
-                   label = "Select Degree Level",
-                   choices = c(
-                     "Bachelor's" = "bachelor",
-                     "Master's" = "master",
-                     "Doctor's" = "doctor"
-                   ),
-                   selected = "bachelor"
-                 ),
-                 checkboxGroupInput(
-                   inputId = "trend_gender_choice",
-                   label = "Select Gender",
-                   choices = c("Male", "Female"),
-                   selected = c("Male", "Female")
-                 ),
-                 br(),
-                 p("This plot shows longitudinal trends of computer science degrees by gender across the U.S."),
-                 p("The vertical dashed grey line indicates 2016, the year AP Computer Science Principles was introduced."),
-                 p("The vertical dashed red line indicates 2020, the year COVID-19 started.")
-               )
-             )
-           )
-           )
-  })
+            )
+            ),#nav_panel("Welcome") ends
+  
+  # OREGON PARTICIPATION (2020-21)
+  
+  nav_panel("Participation", icon = icon("users"),
+            fluidPage(
+              tags$div(
+                style = "background-color: #f8f9fa; padding: 15px;",
+                
+                # Georgraphic map
+                card(
+                  height = "75vh",
+                  card_header("Geographic Distribution of AP CS Enrollment (2020-21)"),
+                  card_body(
+                    padding = 0,
+                    plotlyOutput("participation_map", height = "100%")
+                  )
+                ),
+                
+                # Middle section: Filter
+                card(
+                  card_body(
+                    layout_column_wrap(
+                    width = 1,
+                    selectInput("district_filter", 
+                                "Filter by District:",
+                                choices = c("ALL", sort(unique(part_202021$district_name))))
+                  )
+                )),
+                # BOTTOM SECTION: Descriptive Statistics
 
-############################## ACCESS PLOT ##############################
+                layout_column_wrap(
+                  width = 1/2,
+                  card(height = "500px",
+                       card_header("Enrollment by Race/Ethnicity"),
+                       plotlyOutput("race_bar_plot")),
+                  
+                  card(height = "500px",
+                       card_header("Enrollment by Gender"),
+                       plotlyOutput("gender_bar_plot"))
+                )
+                
+              ) 
+             
+            )
+            ), #nav_panel("Participation") ends
+  
+  
+  # OREGON ECOSYSTEM (2021-22)
+  nav_panel("Capacity", icon = icon("map"),
+            layout_sidebar(
+             sidebar = sidebar(
+               title = "Geography Filters",
+               checkboxGroupInput("locale_filter", "Locale Type:",
+                                  choices = unique(eco_202122$locale),
+                                  selected = unique(eco_202122$locale)),
+             ) ,
+             card(plotlyOutput("eco_map", height = "600px"))
+            )
+            
+            ),#nav_panel(Capacity) ends
+  
+  # POST SECONDARY DEGREES
+  
+  nav_panel("CS Bachelor Degrees", icon = icon("graduation-cap"),
+            layout_sidebar(
+             sidebar = sidebar(
+               selectInput("year_choice", "Year:", choices = sort(unique(nat_deg$year))),
+               checkboxGroupInput("gender_choice", "Gender:", choices = c("male","female"), selected = c("male","female"))
+             ) ,
+             card(plotlyOutput("degree_map"))
+            )
+  ), #nav_panel(cs ba degrees ends)
+  
+  # NATIONAL TRENDS
+  nav_panel("Trends", icon = icon("chart-line"),
+            layout_sidebar(
+              sidebar = sidebar(
+                selectInput("level_choices", "Degree Level:", choices = c("bachelor", "master","doctor"))
+              ),
+              card(plotlyOutput("trend_plot"))
+            )
+    
+  ),#nav_panel(trends end)
+  
+  nav_spacer(),
+  nav_item(
+    tags$a(
+      href = "https://github.com/Go-M-C/Student_Access_to_AP_CS",
+      target = "_blank",
+      bs_icon("github", size = "1.5em", title = "GitHub"),
+      style = "color: #180d00; padding-top: 10px;"
+    )
+  )
+    ) # ui page_nav ends
+
+#############################################################################
+# SERVER
+
+server <- function(input, output){
+  
+
+############################## PARTICIPATION PLOT #######################
+
+  
+  filtered_part_data <- reactive({
+    
+    part <- part_202021
+    if (input$district_filter != "ALL") {
+      part <- part %>% filter(district_name == input$district_filter)
+    }
+    part
+  })
+  
+  output$participation_map <- renderPlotly({
+    req(filtered_part_data())
+    
+    map_sf <- filtered_part_data() %>% 
+      filter(!is.na(lat), !is.na(lon), cs_ap_total > 0) %>% 
+      st_as_sf(coords = c("lon","lat"), crs = 4326)
+    
+    p_part <- ggplot()+
+      geom_sf(data = oregon_shape, fill = "white", color = "#d3d3d3", size = 0.3) +
+      geom_sf(data = map_sf,
+              aes(size = cs_ap_total,
+                  text = paste0("<b>", school_name, "</b><br>Enrollment ", cs_ap_total)),
+              color = "#ab9f7a", 
+              alpha = 0.6) +
+      scale_size_continuous(range = c(2,12), name = "CS Enrollment") +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA)
+      )
+    
+    ggplotly(p_part, tooltip = "text") %>% 
+      layout(margin = list(l=0, r=0, t=0, b=0),
+             yaxis = list(scaleanchor = "x", scaleratio = 1))
+    
+      })
+  
+############################# CAPACITY MAP #######################
+  
+  
+  
   
   
   
@@ -322,11 +298,8 @@ server <- function(input, output){
 
     ggplotly(p1)
   })
-######################### TRENDS ENDS ###########################
   
-
-  
-}
+} #SERVER ENDS
 
 ##############################################################################
 # RUN APP
