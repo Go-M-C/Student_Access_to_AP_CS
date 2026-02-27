@@ -165,7 +165,7 @@ server <- function(input, output){
 
 ############################## PARTICIPATION PLOT #######################
 
-  
+  # map
   output$participation_map <- renderPlotly({
     
     req(part_202021)
@@ -213,6 +213,36 @@ server <- function(input, output){
         ),
         yaxis = list(scaleanchor = "x", scaleratio = 1))
       })
+  
+  # bar chart
+  output$race_bar_plot <- renderPlotly({
+    
+    race_summary <- part_202021 %>% 
+      filter(cs_ap_total > 0) %>% 
+      summarise(
+        Hispanic = sum(cs_ap_count_hispanic, na.rm = TRUE),
+        Black = sum(cs_ap_count_black, na.rm = TRUE),
+        Asian = sum(cs_ap_count_asian, na.rm = TRUE),
+        White = sum(cs_ap_count_white, na.rm = TRUE),
+        Native = sum(cs_ap_count_american_indian, na.rm = TRUE),
+        Multi = sum(cs_ap_count_multi_racial, na.rm = TRUE),
+        Ha_pac_islander = sum(cs_ap_count_native_ha_pa_islander, na.rm = TRUE),
+        Total = sum(cs_ap_total, na.rm = TRUE)
+      ) %>% 
+      pivot_longer(cols = -Total, names_to = "Race", values_to = "Count") %>% 
+      mutate(Percent = (Count/Total)*100)
+    
+    race_chart <- ggplot(race_summary, aes(x = Race, y = Percent, fill = Race)) +
+      geom_col(aes(text = paste0("Group: ", Race,
+                                 "<br>Count: ", Count,
+                                 "<br>Percent:", round(Percent, 1), "%")))+
+      scale_fill_brewer(palette = "BrBG")+
+      theme_minimal()+
+      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio (%)") +
+      theme(legend.position = "none")
+      
+  
+  }) # bar chart ends
   
 ############################# CAPACITY MAP #######################
   
