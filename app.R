@@ -88,47 +88,30 @@ ui <- page_navbar(
   # OREGON PARTICIPATION (2020-21)
   
   nav_panel("Participation", icon = icon("users"),
-            fluidPage(
-              tags$div(
-                style = "background-color: #f8f9fa; padding: 15px;",
-                
-                # Georgraphic map
-                card(
-                  height = "75vh",
-                  card_header("Geographic Distribution of AP CS Enrollment (2020-21)"),
-                  card_body(
-                    padding = 0,
-                    plotlyOutput("participation_map", height = "100%")
-                  )
+            
+            # Geographic map
+            card(
+              height = "85vh",
+              full_screen = TRUE,
+              card_header("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
+              card_body(
+                padding = 0,
+                plotlyOutput("participation_map", height = "100%")),
+              card_footer("Gold circles indicate schools with active AP CS enrollment. Grey circles show schools without reported AP CS.")
                 ),
                 
-                # Middle section: Filter
-                card(
-                  card_body(
-                    layout_column_wrap(
-                    width = 1,
-                    selectInput("district_filter", 
-                                "Filter by District:",
-                                choices = c("ALL", sort(unique(part_202021$district_name))))
-                  )
-                )),
                 # BOTTOM SECTION: Descriptive Statistics
 
-                layout_column_wrap(
-                  width = 1/2,
-                  card(height = "500px",
-                       card_header("Enrollment by Race/Ethnicity"),
-                       plotlyOutput("race_bar_plot")),
-                  
-                  card(height = "500px",
-                       card_header("Enrollment by Gender"),
-                       plotlyOutput("gender_bar_plot"))
+            layout_column_wrap(
+              width = 1/2,
+              card(height = "450px",
+                   card_header("Statewide Race/Ethnicity (AP CS)"),
+                   plotlyOutput("race_bar_plot")),
+              card(height = "450px",
+                   card_header("Statewide Gender(AP CS)"),
+                   plotlyOutput("gender_bar_plot"))
                 )
-                
-              ) 
-             
-            )
-            ), #nav_panel("Participation") ends
+              ), #nav_panel("Participation") ends
   
   
   # OREGON ECOSYSTEM (2021-22)
@@ -139,7 +122,7 @@ ui <- page_navbar(
                checkboxGroupInput("locale_filter", "Locale Type:",
                                   choices = unique(eco_202122$locale),
                                   selected = unique(eco_202122$locale)),
-             ) ,
+             ),
              card(plotlyOutput("eco_map", height = "600px"))
             )
             
@@ -188,35 +171,38 @@ server <- function(input, output){
 ############################## PARTICIPATION PLOT #######################
 
   
-  filtered_part_data <- reactive({
-    
-    part <- part_202021
-    if (input$district_filter != "ALL") {
-      part <- part %>% filter(district_name == input$district_filter)
-    }
-    part
-  })
-  
   output$participation_map <- renderPlotly({
-    req(filtered_part_data())
     
-    map_sf <- filtered_part_data() %>% 
-      filter(!is.na(lat), !is.na(lon), cs_ap_total > 0) %>% 
-      st_as_sf(coords = c("lon","lat"), crs = 4326)
+    req(part_202021)
+    
+    map_data <- part_202021 %>% 
+      filter(!is.na(lat), !is.na(lon)) %>% 
+      mutate(
+        cs_ap_total = if_else(is.na(cs_ap_total), 0, cs_ap_total),
+        total_enrollment_202021 = as.numeric(total_enrollment_202021),
+        status = if_else(cs_ap_total > 0, 
+                         "AP CS Enrolled", 
+                         "No AP CS Reported")
+             )
+    validate(need(nrow(map_data)>0, "No map data available"))
+      
+    map_sf <- st_as_sf(map_data, coords = c("lon","lat"), crs = 4326)
     
     p_part <- ggplot()+
-      geom_sf(data = oregon_shape, fill = "white", color = "#d3d3d3", size = 0.3) +
+      geom_sf(data = oregon_shape, fill = "white", color = "#d3d3d3", linewidth = 0.3) +
       geom_sf(data = map_sf,
-              aes(size = cs_ap_total,
-                  text = paste0("<b>", school_name, "</b><br>Enrollment ", cs_ap_total)),
-              color = "#ab9f7a", 
+              aes(size = total_enrollment_202021,
+                  color = status,
+                  text = paste0("<b>", school_name, "</b><br>",
+                                "District: ", district_name, "<br>",
+                                "Total Enrollment ", total_enrollment_202021,"<br>",
+                                "AP CS Enrollment ", cs_ap_total)),
               alpha = 0.6) +
-      scale_size_continuous(range = c(2,12), name = "CS Enrollment") +
+      scale_color_manual(values = c("AP CS Enrolled" = "#dee2e6", "No AP CS Reported" = "#ab9f7a")) +
+      scale_size_continuous(range = c(1,10)) +
       theme_void() +
       theme(
-        panel.background = element_rect(fill = "white", color = NA),
-        plot.background = element_rect(fill = "white", color = NA)
-      )
+        legend.position = "none")
     
     ggplotly(p_part, tooltip = "text") %>% 
       layout(margin = list(l=0, r=0, t=0, b=0),
