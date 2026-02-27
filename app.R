@@ -91,6 +91,11 @@ ui <- page_navbar(
             
             fluidPage(
               h3("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
+              br(),
+              p("Advanced Placement (AP) courses are college-level classes offered in high school.
+                The courses are designed to provide high school students opportunities to earn college credit through exams."),
+              
+              br(),
               plotlyOutput("participation_map", height = "95vh"),
               
               br(),
@@ -214,7 +219,7 @@ server <- function(input, output){
         yaxis = list(scaleanchor = "x", scaleratio = 1))
       })
   
-  # bar chart
+  # Race plot
   output$race_bar_plot <- renderPlotly({
     
     race_summary <- part_202021 %>% 
@@ -238,11 +243,43 @@ server <- function(input, output){
                                  "<br>Percent:", round(Percent, 1), "%")))+
       scale_fill_brewer(palette = "BrBG")+
       theme_minimal()+
-      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio (%)") +
+      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio by Race (%)") +
       theme(legend.position = "none")
       
   
-  }) # bar chart ends
+  }) # Race plot ends
+  
+  # Gender plot
+  
+  output$gender_bar_plot <- renderPlotly({
+    
+    gender_summary <- part_202021 %>% 
+      filter(cs_ap_total > 0, na.rm = TRUE) %>% 
+      summarise(
+        Male = sum(cs_ap_count_male, na.rm = TRUE),
+        Female = sum(cs_ap_count_female, na.rm = TRUE),
+        Total = sum(cs_ap_total, na.rm = TRUE)
+      ) %>% 
+      pivot_longer(cols = -Total, names_to = "Gender", values_to = "Count") %>% 
+      mutate(Percent = (Count/Total)*100)
+    
+    gender_chart <- ggplot(gender_summary, aes(x = Gender, y = Percent, fill = Gender)) +
+      geom_col(aes(text = paste0("Group: ", Gender,
+                                 "<br>Count: ", Count,
+                                 "<br>Percent:", round(Percent, 1), "%"))
+      ) +
+      scale_fill_brewer() +
+      theme_minimal() +
+      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio by Gender (%)") +
+      theme(legend.position = "none")
+    
+    
+  })# Gender plot ends
+    
+  
+  
+  
+  
   
 ############################# CAPACITY MAP #######################
   
