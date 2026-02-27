@@ -204,12 +204,12 @@ server <- function(input, output){
       layout(
         autosize = TRUE,
         margin = list(l=0, r=0, t=10, b=50),
-        annotates = list(
+        annotations = list(
         x = 0, y = -0.05,
         text = "Pink: AP CS Enrolled | Blue: No AP CS Reported",
         showarrow = F, xref='paper', yref='paper',
         align = 'left',
-        font = list(size = 2, color = "grey")
+        font = list(size = 12, color = "grey")
         ),
         yaxis = list(scaleanchor = "x", scaleratio = 1))
       })
