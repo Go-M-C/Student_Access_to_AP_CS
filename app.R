@@ -89,28 +89,23 @@ ui <- page_navbar(
   
   nav_panel("Participation", icon = icon("users"),
             
-            # Geographic map
-            card(
-              height = "85vh",
-              full_screen = TRUE,
-              card_header("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
-              card_body(
-                padding = 0,
-                plotlyOutput("participation_map", height = "100%")),
-              card_footer("Gold circles indicate schools with active AP CS enrollment. Grey circles show schools without reported AP CS.")
-                ),
-                
-                # BOTTOM SECTION: Descriptive Statistics
-
-            layout_column_wrap(
-              width = 1/2,
-              card(height = "450px",
-                   card_header("Statewide Race/Ethnicity (AP CS)"),
-                   plotlyOutput("race_bar_plot")),
-              card(height = "450px",
-                   card_header("Statewide Gender(AP CS)"),
-                   plotlyOutput("gender_bar_plot"))
-                )
+            fluidPage(
+              h3("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
+              plotlyOutput("participation_map", height = "95vh"),
+              
+              br(),
+              layout_column_wrap(
+                width = 1/2,
+                card(height = "450px",
+                     card_header("Statewide Race/Ethnicity (AP CS)"),
+                     plotlyOutput("race_bar_plot", height = "400px")),
+                card(height = "450px",
+                     card_header("Statewide Gender(AP CS)"),
+                     plotlyOutput("gender_bar_plot", height ="400px"))
+              )
+              
+            )
+            
               ), #nav_panel("Participation") ends
   
   
@@ -198,16 +193,25 @@ server <- function(input, output){
                                 "Total Enrollment ", total_enrollment_202021,"<br>",
                                 "AP CS Enrollment ", cs_ap_total)),
               alpha = 0.6) +
-      scale_color_manual(values = c("AP CS Enrolled" = "#dee2e6", "No AP CS Reported" = "#ab9f7a")) +
+      scale_color_manual(values = c("AP CS Enrolled" = "pink", "No AP CS Reported" = "lightblue")) +
       scale_size_continuous(range = c(1,10)) +
+      coord_sf(expand = FALSE)+
       theme_void() +
       theme(
         legend.position = "none")
     
     ggplotly(p_part, tooltip = "text") %>% 
-      layout(margin = list(l=0, r=0, t=0, b=0),
-             yaxis = list(scaleanchor = "x", scaleratio = 1))
-    
+      layout(
+        autosize = TRUE,
+        margin = list(l=0, r=0, t=10, b=50),
+        annotates = list(
+        x = 0, y = -0.05,
+        text = "Pink: AP CS Enrolled | Blue: No AP CS Reported",
+        showarrow = F, xref='paper', yref='paper',
+        align = 'left',
+        font = list(size = 2, color = "grey")
+        ),
+        yaxis = list(scaleanchor = "x", scaleratio = 1))
       })
   
 ############################# CAPACITY MAP #######################
