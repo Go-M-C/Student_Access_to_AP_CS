@@ -112,5 +112,66 @@ or_apcs_202021 <- apcs_fall_join %>%
 
 
 saveRDS(or_apcs_202021, "data/or_apcs_202021.rds")
+#============================================
+# Analysis
+
+or_hs_enrollment <- or_fall_subset %>% 
+  mutate(across(starts_with("grade_"), ~as.numeric(as.character(.)))) %>% 
+  mutate(across(starts_with("grade_"), ~replace_na(., 0))) %>% 
+  mutate(hs_enrollment = rowSums(across(c(grade_nine, grade_ten,
+                                          grade_eleven,grade_twelve)), 
+                                 na.rm = TRUE)) %>% 
+  filter(hs_enrollment > 0) %>% 
+  select(school_match, district_match,hs_enrollment,total_enrollment_202021)
+
+ap_model <- or_ap_cs_prepared %>% 
+  inner_join(or_hs_enrollment, by = c("school_match", "district_match")) %>% 
+  left_join(or_geo_simple, by = c("school_match", "district_match")) %>% 
+  filter(!is.na(locale)) %>% 
+  mutate(
+    has_ap_cs = if_else(cs_ap_total>0, 1, 0),
+    locale = as.factor(locale)
+  ) %>% 
+  select(school_match,school_name,district_match,district_name,
+         total_enrollment_202021, hs_enrollment,
+         lat, lon,locale,has_ap_cs,cs_ap_total, everything())
+  
+saveRDS(ap_model, "data/ap_cs_model.rds")
+logit_model <- glm(has_ap_cs ~ hs_enrollment + locale,
+                   data = ap_model,
+                   family = binomial)
+summary(logit_model)
+
+exp(coef(logit_model))
+
+ggplot(ap_model, aes(x = hs_enrollment, y = has_ap_cs))+
+  geom_point(aes(color = locale), alpha = 0.5) +
+  stat_smooth(method = "glm", method.args = list(family = "binomial"),
+              se = TRUE, color = "#ab9f7a") +
+  theme_minimal()+
+  labs(
+    title = "Probability of Offering AP CS by School Size",
+    x = "High School Enrollment",
+    y = "Probability (0 to 1)"
+  )
+
+locale_summary <- ap_model %>% 
+  group_by(locale) %>% 
+  summarise(
+    total_schools = n(),
+    schools_with_cs = sum(has_ap_cs, na.rm = TRUE),
+    access_rate = round((schools_with_cs/total_schools)*100,digits = 1),
+    avg_enrollment = round(mean(hs_enrollment, na.rm = TRUE),digits = 1),
+    avg_cs_in_offering_schools = round(mean(cs_ap_total[cs_ap_total > 0], na.rm = TRUE), digits = 1)
+  ) %>% 
+  arrange(desc(access_rate))
+
+saveRDS(locale_summary, "data/ap_cs_locale_summary.rds")
+
+table(ap_model$locale, ap_model$has_ap_cs)
+
+
+ggplot(ap_model, aes(x = locale, y = ))
+
 
 

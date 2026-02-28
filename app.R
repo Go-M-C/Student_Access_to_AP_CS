@@ -16,6 +16,7 @@ library(readxl)
 library(gganimate)
 library(gifski)
 library(janitor)
+library(DT)
 library(sf)
 library(tigris)
 options(tigris_use_cache = TRUE) # save the shapefiles downloads locally
@@ -32,7 +33,8 @@ part_202021 <- readRDS("data/or_apcs_202021.rds")
 eco_202122 <- readRDS("data/or_cs_eco_2122.rds")
 nat_deg <- readRDS("data/nat_degrees_long.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
-
+ap_cs_model <- readRDS("data/ap_cs_model.rds")
+ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
 
 ########################## UI DESIGN ##################################
 
@@ -97,6 +99,22 @@ ui <- page_navbar(
               
               br(),
               plotlyOutput("participation_map", height = "95vh"),
+              
+              br(),
+              layout_column_wrap(
+                width = 1/2,
+                card(height = "450px",
+                     card_header("AP CS Participation by Locale"),
+                     plotlyOutput("ap_locale_bar_plot")
+                     ),
+                
+                card(height = "450px",
+                     card_header("Summary Table: Access & Enrollment"),
+                     DT::DTOutput("ap_locale_summary_table")
+                     ),
+              ),
+              
+              p("ADDING TEXT HERE TO DESCRIBE THE ANALYSIS"),
               
               br(),
               layout_column_wrap(
@@ -198,7 +216,7 @@ server <- function(input, output){
                                 "Total Enrollment ", total_enrollment_202021,"<br>",
                                 "AP CS Enrollment ", cs_ap_total)),
               alpha = 0.6) +
-      scale_color_manual(values = c("AP CS Enrolled" = "pink", "No AP CS Reported" = "lightblue")) +
+      scale_color_manual(values = c("No AP CS Reported" = "#E1BE6A", "AP CS Enrolled" = "#40b0a6")) +
       scale_size_continuous(range = c(1,10)) +
       coord_sf(expand = FALSE)+
       theme_void() +
@@ -218,6 +236,51 @@ server <- function(input, output){
         ),
         yaxis = list(scaleanchor = "x", scaleratio = 1))
       })
+  
+  # Locale chart
+  output$ap_locale_bar_plot <- renderPlotly({
+  locale_plot_data <- ap_cs_model %>% 
+    group_by(locale) %>% 
+    summarise(total_cs_students = sum(cs_ap_total, na.rm = TRUE)) %>% 
+    arrange(desc(total_cs_students))
+  
+  locale_chart <- ggplot(locale_plot_data, aes(x = locale, y = total_cs_students,
+                                               fill = locale)) +
+    geom_col(aes(text = paste0("Locale: ", locale, "<br>Total Students:", total_cs_students))) +
+    scale_fill_brewer(palette = "Set3") +
+    theme_minimal() +
+    labs(x = NULL, y = "Total AP CS Students Enrolled(2020-21)") +
+    theme(legend.position = "none")
+  
+  ggplotly(locale_chart, tooltip = "text")
+  
+  })# Locale chart ends
+  
+  
+  
+  # Locale table
+  output$ap_locale_summary_table <- DT::renderDT({
+    datatable(ap_locale_summary,
+              colnames = c("Locale","Total High Schools",
+                           "Offer CS", "Access Rate",
+                           "Avg Size", "Avg Enroll in AP CS Offering Schools"),
+              options = list(
+                dom = 't',
+                pageLength = 6,
+                scrollX = TRUE
+              ),
+              rownames = FALSE) %>% 
+    formatStyle('access_rate',
+                color = "white",
+                backgroundColor = styleInterval(c(20,50), c("#d9534f","#f0ad4e","#5cb85c")))
+    
+    
+    
+    
+    
+  })# Locale table ends
+    
+    
   
   # Race plot
   output$race_bar_plot <- renderPlotly({
