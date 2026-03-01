@@ -8,7 +8,7 @@ library(readr)
 library(dplyr)
 # read in 20-21 enrollment data from ODE
 # read in 20-21 Oregon AP course count data from CRDC
-
+# ==============================PARTICIPATION========================#
 # 1. CRDC AP ESSA DATA(2020-21)
 or_ap_raw<- read_xlsx(here("data","ESSA_202021_CRDC_AP_IB_DE.xlsx"),
                       sheet = 2) %>% 
@@ -173,5 +173,53 @@ table(ap_model$locale, ap_model$has_ap_cs)
 
 ggplot(ap_model, aes(x = locale, y = ))
 
+# ================================Capacity OF CS=======================#
+or_fall_raw_2122 <- read_xlsx(here("data","fallmembershipreport_20212022.xlsx"),sheet = 4) %>% 
+  clean_names() 
+
+or_fall_subset_2122 <- or_fall_raw_2122 %>% 
+  mutate(
+    school_match = str_to_lower(str_trim(school)),
+    district_match = str_to_lower(str_trim(district_name))
+  ) %>% 
+  select(
+    school_match,district_match,
+    district_id = attending_district_institution_id,
+    school_id = attending_school_institution_id,
+    school_name = school,
+    total_enrollment_202122 = x2021_22_total_enrollment,
+    american_indian = x2021_22_american_indian_alaska_native,
+    asian = x2021_22_asian,
+    native_ha_pa_islander = x2021_22_native_hawaiian_pacific_islander,
+    black = x2021_22_black_african_american,
+    hispanic = x2021_22_hispanic_latino,
+    white = x2021_22_white,
+    multi_racial = x2021_22_multi_racial,
+    kindergarten = x2021_22_kindergarten,
+    grade_one = x2021_22_grade_one,
+    grade_two = x2021_22_grade_two,
+    grade_three = x2021_22_grade_three,
+    grade_four = x2021_22_grade_four,
+    grade_five = x2021_22_grade_five,
+    grade_six = x2021_22_grade_six,
+    grade_seven = x2021_22_grade_seven,
+    grade_eight = x2021_22_grade_eight,
+    grade_nine = x2021_22_grade_nine,
+    grade_ten = x2021_22_grade_ten,
+    grade_eleven = x2021_22_grade_eleven,
+    grade_twelve = x2021_22_grade_twelve
+  )
 
 
+
+or_cs_eco_with_enroll_2122 <- eco_202122 %>% 
+  left_join(or_fall_subset_2122, by = c("school_match", "district_match")) %>% 
+  mutate(
+    total_enrollment_202122 = as.numeric(as.character(total_enrollment_202122)),
+    total_enrollment_202122 = replace_na(total_enrollment_202122, 0),
+    number_of_courses = as.numeric(as.character(number_of_courses))
+    ) %>% 
+  select("school_year","locale","districtname","school_name",
+         "total_enrollment_202122","subcategory","number_of_courses","latcod","loncod", everything())
+
+saveRDS(or_cs_eco_with_enroll_2122, "data/or_cs_eco_with_enroll_2122.rds")
