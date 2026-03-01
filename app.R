@@ -31,6 +31,7 @@ oregon_shape <- states(cb = TRUE, resolution = "20m") %>%
 
 part_202021 <- readRDS("data/or_apcs_202021.rds")
 eco_202122 <- readRDS("data/or_cs_eco_2122.rds")
+eco_full_202122 <- readRDS("data/or_cs_eco_with_enroll_2122.rds")
 nat_deg <- readRDS("data/nat_degrees_long.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
@@ -47,6 +48,30 @@ ui <- page_navbar(
     span("Oregon Computer Science Education Overview",
          style = "font-size: 16px; font-weight: 400; color: #6c757d; margin-top: -2px;")
     ),
+  position = "fixed-top",
+  
+  header = tags$head(
+    tags$style(HTML("
+                    body{
+                    padding-top: 250px;
+                    }
+                    h2{
+                    padding-top:20px;
+                    margin-top: 50px;
+                    clear: both;
+                    }
+                    .navbar{
+                    z-index: 2000;
+                    backgroud-color: white;
+                    border-bottom: 2px solid #dee2e6;
+                    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+                    min-height: 80px;
+                    }
+                    .container-fluid{
+                    margin-top: 20px;
+                    }
+                    "))
+  ),
   
   
   theme = bs_theme(
@@ -92,7 +117,7 @@ ui <- page_navbar(
   nav_panel("Participation", icon = icon("users"),
             
             fluidPage(
-              h3("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
+              h2("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
               br(),
               p("Advanced Placement (AP) courses are college-level classes offered in high school.
                 The courses are designed to provide high school students opportunities to earn college credit through exams."),
@@ -134,14 +159,52 @@ ui <- page_navbar(
   
   # OREGON ECOSYSTEM (2021-22)
   nav_panel("Capacity", icon = icon("map"),
-            layout_sidebar(
-             sidebar = sidebar(
-               title = "Geography Filters",
-               checkboxGroupInput("locale_filter", "Locale Type:",
-                                  choices = unique(eco_202122$locale),
-                                  selected = unique(eco_202122$locale)),
-             ),
-             card(plotlyOutput("eco_map", height = "600px"))
+           
+            fluidPage(
+              h2("Oregon Schools: Computer Science Course Capacity (2021-22)"),
+              br(),
+              p("This part of the project depict the breadth of computer science offerings beyond AP courses.
+                This includes Web Development, Cybersecurity, Information System, Information Technology,
+                Foundational CS, and Core CS. The course variety represent the diverse pathways available to Oregon Students"),
+              
+              br(),
+              layout_sidebar(
+                sidebar = sidebar(
+                  selectInput("eco_locale_filter", "Filter by Locale: ",
+                              choices = c("All", sort(unique(eco_full_202122$locale)))),
+                  checkboxGroupInput("eco_course_filter", "Course Categories: ",
+                                     choices = sort(unique(eco_full_202122$subcategory)),
+                                     selected = unique(eco_full_202122$subcategory))
+              ),
+              plotlyOutput("eco_map", height = "85vh")
+            ),
+            
+            br(),
+            layout_column_wrap(
+              width = 1/2,
+              card(
+                height = "450px",
+                card_header("CS Course Diversity by Locale"),
+                plotlyOutput("eco_locale_bar_plot")
+              ),
+              card(
+                height = "450px",
+                card_header("Summary Table: Ecosystem Variety"),
+                DT::DTOutput("eco_summary_table")
+              ),
+            ),
+            p("Analysis: While AP CS courses participation(2020-21) show students involvement in academic tracks,
+              this 2021-22 capacity data reflects the state's landscape of CS capacity"),
+            
+            br(),
+            layout_column_wrap(
+              width = 1/2,
+              card(
+                height = "450px",
+                card_header("Statewide Course Distribution"),
+                plotlyOutput("eco_subcategory_bar_chart", height = "400px")
+              )
+              )
             )
             
             ),#nav_panel(Capacity) ends
@@ -307,7 +370,7 @@ server <- function(input, output){
       scale_fill_brewer(palette = "BrBG")+
       theme_minimal()+
       labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio by Race (%)") +
-      theme(legend.position = "none")
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
       
   
   }) # Race plot ends
@@ -340,16 +403,97 @@ server <- function(input, output){
   })# Gender plot ends
     
   
-  
-  
-  
-  
 ############################# CAPACITY MAP #######################
   
+  output$eco_map <- renderPlotly({
+    
+    eco_map_data <- eco_full_202122 %>% 
+      filter(number_of_courses > 0) %>% 
+      filter(subcategory %in% input$eco_course_filter) %>% 
+      filter(!is.na(latcod), !is.na(loncod))
+    
+    if (input$eco_locale_filter != "All") {
+      eco_map_data <- eco_map_data %>% 
+        filter(locale == input$eco_locale_filter)
+    }
+    
+    p_eco <- ggplot() +
+      geom_sf(data = oregon_shape, fill = "white", color = "black") +
+      geom_point(data = eco_map_data,
+                 aes(x = loncod, y = latcod,
+                     size = total_enrollment_202122,
+                     color = subcategory,
+                     text = paste0("<b>", school_name, "</b><br>",
+                                   "Locale: ", locale, "<br>",
+                                   "Course: ", subcategory)),
+                 alpha = 0.3)+
+      scale_size_continuous(range = c(2,12), name = "Enrollment") +
+      scale_color_brewer(palette = "PiYG") +
+      theme_void()+
+      theme(legend.position = "none")
+    
+    ggplotly(p_eco, tooltip = "text") %>% 
+      layout(margin = list(l=0, r=0, t=0, b=0))
+  })
+  
+  # ECO map ends
+  
+  # ECO course by locale
+  
+  output$eco_locale_bar_plot <- renderPlotly({
+    locale_course <- eco_full_202122 %>% 
+      filter(number_of_courses > 0) %>% 
+      group_by(locale) %>% 
+      summarise(total_offerings = sum(number_of_courses, na.rm = TRUE),
+                .groups = "drop") %>% 
+      arrange(desc(total_offerings))
+    
+    p_locale_bar <- ggplot(locale_course, aes(x = reorder(locale, -total_offerings),
+                                              y = total_offerings,
+                                              fill = locale,
+                                              text = paste0("Locale: ", locale, "<br>Total Courses: ", total_offerings)))+
+      geom_col() +
+      scale_fill_brewer(palette = "Set2") +
+      theme_minimal() +
+      labs(x = NULL, y = "Total Course Offerings") +
+      theme(legend.position = "none")
+    
+    ggplotly(p_locale_bar)
+  })
+  
+  # ECO course by locale ends
+  
+  # ECO summary table
   
   
   
+  # ECO summary table ends
   
+  
+  # ECO subcategory chart
+  output$eco_subcategory_bar_chart <- renderPlotly({
+    subcategory_counts <- eco_full_202122 %>% 
+      filter(number_of_courses > 0) %>% 
+      group_by(subcategory) %>% 
+      summarise(school_count = n_distinct(school_match)) %>% 
+      arrange(desc(school_count))
+    
+    p_subcat_bar <- ggplot(subcategory_counts, 
+                          aes(x = reorder(subcategory, -school_count), 
+                           y = school_count, 
+                           fill = subcategory,
+                           text = paste0("Category: ", subcategory, "<br>Schools: ", school_count)))+
+      geom_col() +
+      scale_fill_brewer(palette = "Set3") +
+      theme_minimal() +
+      labs(x = "Course Category", y = "Number of Schools") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+    
+    ggplotly(p_subcat_bar, tooltip = "text")
+    
+  })
+  
+  # ECO subcategory chart
   
 ############################## DEGREE PLOT ##############################
   
