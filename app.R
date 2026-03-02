@@ -36,6 +36,7 @@ nat_deg <- readRDS("data/nat_degrees_long.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
 ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
+cs_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
 
 ########################## UI DESIGN ##################################
 
@@ -172,9 +173,10 @@ ui <- page_navbar(
                 sidebar = sidebar(
                   selectInput("eco_locale_filter", "Filter by Locale: ",
                               choices = c("All", sort(unique(eco_full_202122$locale)))),
-                  checkboxGroupInput("eco_course_filter", "Course Categories: ",
-                                     choices = sort(unique(eco_full_202122$subcategory)),
-                                     selected = unique(eco_full_202122$subcategory))
+                  selectInput("eco_course_filter", "Select CS Course Categories: ",
+                              choices = c("All", sort(unique(eco_full_202122$subcategory))),
+                              selected = "All"
+                              )
               ),
               plotlyOutput("eco_map", height = "85vh")
             ),
@@ -279,7 +281,7 @@ server <- function(input, output){
                                 "Total Enrollment ", total_enrollment_202021,"<br>",
                                 "AP CS Enrollment ", cs_ap_total)),
               alpha = 0.6) +
-      scale_color_manual(values = c("No AP CS Reported" = "#E1BE6A", "AP CS Enrolled" = "#40b0a6")) +
+      scale_color_manual(values = c("No AP CS Reported" = "#40b0a6", "AP CS Enrolled" = "#E1BE6A")) +
       scale_size_continuous(range = c(1,10)) +
       coord_sf(expand = FALSE)+
       theme_void() +
@@ -292,7 +294,7 @@ server <- function(input, output){
         margin = list(l=0, r=0, t=10, b=50),
         annotations = list(
         x = 0, y = -0.05,
-        text = "Pink: AP CS Enrolled | Blue: No AP CS Reported",
+        text = "Yellow: AP CS Enrolled | Blue: No AP CS Reported",
         showarrow = F, xref='paper', yref='paper',
         align = 'left',
         font = list(size = 12, color = "grey")
@@ -405,12 +407,20 @@ server <- function(input, output){
   
 ############################# CAPACITY MAP #######################
   
+  all_subcategories <- sort(unique(eco_full_202122$subcategory))
+  
   output$eco_map <- renderPlotly({
     
     eco_map_data <- eco_full_202122 %>% 
       filter(number_of_courses > 0) %>% 
-      filter(subcategory %in% input$eco_course_filter) %>% 
+      mutate(subcategory = factor(subcategory, levels = all_subcategories)) %>% 
+      filter(subcategory %in% input$eco_course_filter | input$eco_course_filter == "All") %>% 
       filter(!is.na(latcod), !is.na(loncod))
+    
+    if(input$eco_course_filter != "All") {
+      eco_map_data <- eco_map_data %>% 
+        filter(subcategory == input$eco_course_filter)
+    }
     
     if (input$eco_locale_filter != "All") {
       eco_map_data <- eco_map_data %>% 
@@ -421,14 +431,15 @@ server <- function(input, output){
       geom_sf(data = oregon_shape, fill = "white", color = "black") +
       geom_point(data = eco_map_data,
                  aes(x = loncod, y = latcod,
-                     size = total_enrollment_202122,
+                     size = number_of_courses,
                      color = subcategory,
                      text = paste0("<b>", school_name, "</b><br>",
                                    "Locale: ", locale, "<br>",
-                                   "Course: ", subcategory)),
+                                   "Course Category: ", subcategory,"<br>",
+                                   "Course Offered: ", number_of_courses)),
                  alpha = 0.3)+
-      scale_size_continuous(range = c(2,12), name = "Enrollment") +
-      scale_color_brewer(palette = "PiYG") +
+      scale_size_continuous(range = c(3,12), name = "Number of Courses") +
+      scale_color_viridis_d(option = "D", drop = FALSE) +
       theme_void()+
       theme(legend.position = "none")
     
@@ -441,22 +452,24 @@ server <- function(input, output){
   # ECO course by locale
   
   output$eco_locale_bar_plot <- renderPlotly({
+    
     locale_course <- eco_full_202122 %>% 
       filter(number_of_courses > 0) %>% 
       group_by(locale) %>% 
-      summarise(total_offerings = sum(number_of_courses, na.rm = TRUE),
+      summarise(Total_Offerings = sum(number_of_courses, na.rm = TRUE),
+                Avg_Variety = round(sum(number_of_courses)/n_distinct(school_match), 2),
                 .groups = "drop") %>% 
-      arrange(desc(total_offerings))
+      pivot_longer(cols = c(Total_Offerings, Avg_Variety),
+                   names_to = "Metric",
+                   values_to = "Value")
     
-    p_locale_bar <- ggplot(locale_course, aes(x = reorder(locale, -total_offerings),
-                                              y = total_offerings,
-                                              fill = locale,
-                                              text = paste0("Locale: ", locale, "<br>Total Courses: ", total_offerings)))+
-      geom_col() +
+    p_locale_bar <- ggplot(locale_course, aes(x = locale,y = Value,fill = Metric))+
+      geom_col(position = "dodge") +
+      facet_wrap(~Metric, scales = "free_y")+
       scale_fill_brewer(palette = "Set2") +
       theme_minimal() +
-      labs(x = NULL, y = "Total Course Offerings") +
-      theme(legend.position = "none")
+      labs(x = NULL, y = "Count/Average Variety") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
     
     ggplotly(p_locale_bar)
   })
@@ -465,9 +478,24 @@ server <- function(input, output){
   
   # ECO summary table
   
-  
-  
-  # ECO summary table ends
+  output$eco_summary_table <- DT::renderDT({
+    datatable(
+      or_eco_summary,
+      colnames = c("Locale", "Total Schools", "Number of Schools with CS",
+                   "9-12 Enrollment", "Avg School Size", "Total Offerings",
+                   "Capacity per 100 HS", "Avg Variety"),
+      rownames = FALSE,
+      options = list(
+        dom = "t", #no filter boxes,
+        pageLength = 10,
+        order = list(list(4,'desc')),#sort by avg variety
+        columnDefs = list(list(className = 'dt-center', targets = "_all"))      
+        ),
+      caption = "Table: Comparison of CS Capacity and Density by Locale (2021-22)"
+    )
+    
+    
+  }) # ECO summary table ends
   
   
   # ECO subcategory chart

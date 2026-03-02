@@ -223,3 +223,31 @@ or_cs_eco_with_enroll_2122 <- eco_202122 %>%
          "total_enrollment_202122","subcategory","number_of_courses","latcod","loncod", everything())
 
 saveRDS(or_cs_eco_with_enroll_2122, "data/or_cs_eco_with_enroll_2122.rds")
+
+eco_enroll_202122 <- readRDS("data/or_cs_eco_with_enroll_2122.rds")
+
+or_eco_summary <- eco_enroll_202122 %>% 
+  group_by(school_name, locale) %>% 
+  mutate(grade_nine = as.numeric(as.character(grade_nine)),
+         grade_ten = as.numeric(as.character(grade_ten)),
+         grade_eleven = as.numeric(as.character(grade_eleven)),
+         grade_twelve = as.numeric(as.character(grade_twelve))) %>% 
+  summarise(
+    school_total_courses = sum(number_of_courses, na.rm = TRUE),
+    hs_enroll_9_12 = first(grade_nine+grade_ten+grade_eleven+grade_twelve), .groups = "drop"
+  ) %>% 
+  group_by(locale) %>% 
+  summarise(
+    Total_Schools = n_distinct(school_name),
+    Schools_with_CS = sum(school_total_courses>0),
+    Total_HS_Enrollment = sum(hs_enroll_9_12, na.rm = TRUE),
+    Avg_School_Size = round(mean(hs_enroll_9_12, na.rm = TRUE),0),
+    Total_CS_Offerings = sum(school_total_courses, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  mutate(Capacity_Per_100_HS = round((Total_CS_Offerings/Total_HS_Enrollment) *100, 2),
+         Avg_Variety_Per_School = round(Total_CS_Offerings/Total_Schools,2))
+
+saveRDS(or_eco_summary, "data/or_eco_locale_summary.rds")
+#The Urban "Breadth" Strategy: Large city schools serve massive populations (Avg. 1,043 students). While their "per-capita" density is lower (0.42), they offer more than double the variety (4.35 subcategories). A student in a city likely has choices: AP CS, Robotics, Web Dev, and AI.
+#The Rural "Presence" Strategy: Rural schools are small (Avg. 198 students). They have a high "per-capita" density (1.06) because even one course in a tiny school creates a high ratio. However, their variety is limited (2.10 subcategories). A student there likely only has: Intro to CS and maybe one other option.
