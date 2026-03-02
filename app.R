@@ -36,7 +36,7 @@ nat_deg <- readRDS("data/nat_degrees_long.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
 ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
-cs_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
+or_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
 
 ########################## UI DESIGN ##################################
 
@@ -493,7 +493,6 @@ server <- function(input, output){
         ),
       caption = "Table: Comparison of CS Capacity and Density by Locale (2021-22)"
     )
-    
     
   }) # ECO summary table ends
   
