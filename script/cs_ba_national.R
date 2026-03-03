@@ -10,27 +10,46 @@ library(tigris)
 options(tigris_use_cache = TRUE) 
 
 cs_ba_national <- read_csv(here("data","cs_ba_us_12_22.csv"), skip = 3)
+all_ba_national <- read_excel(here("data", "all_ba_us.xlsx"), skip = 4)
 
-national_clean <- cs_ba_national %>% 
-  filter(!is.na(State), State != "Total") %>% 
+cs_ba_clean <- cs_ba_national %>% 
+  filter(!State %in% c("Total", "United States", "US Total","National")) %>% 
   filter(!is.na(Total)) %>% 
   mutate(
-    year = as.numeric(str_extract(`Completion Year`,"\\d{4}"))
-  ) %>% 
-  mutate(
-    Total = as.numeric(Total),
-    Male = as.numeric(Male),
-    Female = as.numeric(Female)
-  )
+    year = as.numeric(str_extract(`Completion Year`,"\\d{2,4}$")),
+    year = ifelse(year <100, 2000+year, year),
+    across(c(Total, Male, Female), as.numeric)) %>% 
+  select(everything(), Total_cs = Total) %>% 
+  clean_names()
 
-cs_state_long <- national_clean %>% 
-  pivot_longer(
-    cols = c(Total, Male, Female),
-    names_to = "gender",
-    values_to = "degrees") %>% 
-  mutate(gender = factor(gender,
-                         levels = c("Total", "Male","Female"),
-                         labels = c("Total", "Male", "Female")))
+cs_ba_ratio <- cs_ba_clean %>% 
+  mutate(
+    cs_female_percent = round((female/total_cs) * 100,digits = 2),
+    cs_male_percent = round((male/total_cs)*100,digits = 2),
+    m_f_ratio = round(male/female, digits = 2)
+  ) %>% 
+  select(completion_year,year, everything())
+
+all_ba_clean <- all_ba_national %>% 
+  clean_names() %>%
+  filter(!state %in% c("Total", "United States", "US Total", "National")) %>% 
+  filter(!is.na(total)) %>% 
+  mutate(
+    year = as.numeric(str_extract(completion_year,"\\d{2,4}$")),
+    year = ifelse(year <100, 2000+year, year)) %>% 
+  select(year, completion_year, state, total_all = total, everything(), - undesignated_field_of_study)
+
+all_ba_enroll <- all_ba_clean %>% 
+  select(year, state,total_all)
+
+cs_ba_final <- cs_ba_ratio %>% 
+  inner_join(all_ba_enroll, by = c("year", "state")) %>% 
+  select(completion_year,year, state,total_cs,total_all, everything(), cs_m_f_ratio = m_f_ratio)
+
+
+
+selected_year <- 2017
+
 
 us_states <- states(cb = TRUE)
 
@@ -39,7 +58,7 @@ selected_gender <- "Female"
 
 cs_map_data <- us_states %>% 
   left_join(
-    cs_state_long %>% 
+    national_ratio %>% 
       filter(year == selected_year,
              gender == selected_gender) %>% 
       select(State,degrees),

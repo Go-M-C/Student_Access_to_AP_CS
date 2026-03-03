@@ -1,6 +1,6 @@
-National Center for Education Statistics
-"Number of degrees/certificates awarded at postsecondary institutions, by state and  gender: 2023-24"
-
+National Center for Education Statistics,,,,
+"Number of degrees/certificates awarded at postsecondary institutions, by state and  gender: 2023-24",,,,
+,,,,
 Completion Year,State,Total,Male,Female
 2023-24,Total,"121,227","92,754","28,473"
 2023-24,Alabama,"1,128",839,289
@@ -1146,13 +1146,13 @@ Completion Year,State,Total,Male,Female
 2002-03,West Virginia,270,213,57
 2002-03,Wisconsin,870,673,197
 2002-03,Wyoming,19,19,0
-
-"This table presents data collected from Title IV institutions in the United States. Prior to 2009-10, the data include only Title IV primarily postsecondary institutions."
-"The new Doctor's degree classifications of research/scholarship, professional practice, and other Doctor's degrees were optional in 2007-08 and 2008-09 and became mandatory in 2009-10.  The old classifications of Doctor's degree, first-professional degree, and first-professional certificate were no longer reported after 2008-09. For information on comparing the old and new post-baccalaureate award classifications, go to <a href=""https://nces.ed.gov/ipeds/report-your-data/data-tip-sheet-reporting-graduate-awards"" target=""_blank"">https://nces.ed.gov/ipeds/report-your-data/data-tip-sheet-reporting-graduate-awards</a>."
-"SOURCE: U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS), Completions component final data (2001-02 - 2022-23) and provisional data (2023-24)."
-
-
-Results limited By
-Sector of institution,"Public, 4-year or above; Private not-for-profit, 4-year or above; Private for-profit, 4-year or above"
-Award level,Bachelor's degree
-CIP Code,Computer and Information Sciences and Support Services
+,,,,
+"This table presents data collected from Title IV institutions in the United States. Prior to 2009-10, the data include only Title IV primarily postsecondary institutions.",,,,
+"The new Doctor's degree classifications of research/scholarship, professional practice, and other Doctor's degrees were optional in 2007-08 and 2008-09 and became mandatory in 2009-10.  The old classifications of Doctor's degree, first-professional degree, and first-professional certificate were no longer reported after 2008-09. For information on comparing the old and new post-baccalaureate award classifications, go to <a href=""https://nces.ed.gov/ipeds/report-your-data/data-tip-sheet-reporting-graduate-awards"" target=""_blank"">https://nces.ed.gov/ipeds/report-your-data/data-tip-sheet-reporting-graduate-awards</a>.",,,,
+"SOURCE: U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS), Completions component final data (2001-02 - 2022-23) and provisional data (2023-24).",,,,
+,,,,
+,,,,
+Results limited By,,,,
+Sector of institution,"Public, 4-year or above; Private not-for-profit, 4-year or above; Private for-profit, 4-year or above",,,
+Award level,Bachelor's degree,,,
+CIP Code,Computer and Information Sciences and Support Services,,,
