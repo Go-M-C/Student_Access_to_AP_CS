@@ -689,7 +689,7 @@ server <- function(input, output){
        }
      
        if (input$gender_choices != "All") {
-         trend_data <- trend_data %>% 
+         trend_data <- trend_data %>%
            filter(gender == input$gender_choices)
        }
        
@@ -701,12 +701,13 @@ server <- function(input, output){
     
 
     p_trend <- ggplot(filtered_cs(),
-                 aes(x = academic_year, y = value,color = gender, group = gender)) +
+                 aes(x = academic_year, y = value,
+                     color = gender, group = gender)) +
       geom_line(linewidth = 1) +
       geom_point(alpha = 0.5) +
       scale_y_continuous(labels = scales::comma) +
       scale_x_continuous(breaks = seq(1965, 2022, by = 5))+
-      scale_color_viridis_d(option = "virids", end = 0.8) +
+      scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
       geom_vline(xintercept = 2016, linetype = "dashed", color = "grey70")+
       geom_vline(xintercept = 2020, linetype = "dashed", color = "red")+
       labs(title = paste(
