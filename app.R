@@ -712,7 +712,7 @@ server <- function(input, output){
       geom_vline(xintercept = 2020, linetype = "dashed", color = "red")+
       labs(title = paste(
           "United States", tools::toTitleCase(input$level_choices),
-          "Degree Trends"
+          "CS Degree Trends"
         ),
         x = "Academic Year",
         y = "Number of Degrees") +
