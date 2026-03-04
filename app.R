@@ -27,12 +27,15 @@ oregon_shape <- states(cb = TRUE, resolution = "20m") %>%
   filter(NAME == "Oregon") %>% 
   st_transform(4326)
 
+us_states <- states(cb = TRUE, resolution = "20m") %>% 
+  shift_geometry()
+
 ##########################DATA LOADING################################
 
 part_202021 <- readRDS("data/or_apcs_202021.rds")
 eco_202122 <- readRDS("data/or_cs_eco_2122.rds")
 eco_full_202122 <- readRDS("data/or_cs_eco_with_enroll_2122.rds")
-nat_deg <- readRDS("data/nat_degrees_long.rds")
+nat_cs_ba <- readRDS("data/nat_cs_ba_final.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
 ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
@@ -124,7 +127,7 @@ ui <- page_navbar(
                 The courses are designed to provide high school students opportunities to earn college credit through exams."),
               
               br(),
-              plotlyOutput("participation_map", height = "95vh"),
+              plotlyOutput("participation_map", height = "85vh"),
               
               br(),
               layout_column_wrap(
@@ -214,13 +217,46 @@ ui <- page_navbar(
   # POST SECONDARY DEGREES
   
   nav_panel("CS Bachelor Degrees", icon = icon("graduation-cap"),
-            layout_sidebar(
-             sidebar = sidebar(
-               selectInput("year_choice", "Year:", choices = sort(unique(nat_deg$year))),
-               checkboxGroupInput("gender_choice", "Gender:", choices = c("male","female"), selected = c("male","female"))
-             ) ,
-             card(plotlyOutput("degree_map"))
-            )
+            
+            fluidPage(
+              
+              h2("U.S. Computer Science Degrees (2003-24)"),
+              br(),
+              p("This part of the project depict the computer science 
+                degree awarded by the 4-year institutions in the U.S."),
+              
+              br(),
+              
+              layout_columns(
+                col_widths = c(7,5),
+                card(
+                  card_header("Computer Sciences Degrees Awarded by states(%)"),
+                  plotlyOutput("degree_map", height = "500px")
+                ),
+                card(
+                  card_header("Oregon and Other States vs. the National Average(%)"),
+                  plotOutput("trend_line_plot", height = "500px")
+                )),
+              card(
+                card_body(
+                  layout_columns(
+                    col_widths = c(4,8),
+                    selectInput("map_metric", "Select Metric: ",
+                                choices = c("CS Percentage of All Degrees" = "cs_percent",
+                                            "Female Percentage of CS Degrees" = "cs_female_percent",
+                                            "Male to Female CS Ratio" = "cs_m_f_ratio")),
+                    sliderInput("map_year", "Select Year: ",
+                                min = 2003, max = 2024, value = 2024,
+                                sep = "", animate = TRUE) 
+                    )
+                  )
+                ),
+              card(
+                card_header("State by State Data Details"),
+                DT::DTOutput("state_data_table")
+              )
+                )
+              
   ), #nav_panel(cs ba degrees ends)
   
   # NATIONAL TRENDS
@@ -405,7 +441,7 @@ server <- function(input, output){
   })# Gender plot ends
     
   
-############################# CAPACITY MAP #######################
+############################# CAPACITY TAB #######################
   
   all_subcategories <- sort(unique(eco_full_202122$subcategory))
   
@@ -522,40 +558,72 @@ server <- function(input, output){
   
   # ECO subcategory chart
   
-############################## DEGREE PLOT ##############################
+############################## DEGREE TAB ##############################
   
+  # Degree Map
   
-  filtered_state <- reactive({
-    cs_state_long %>% 
-      filter(year == as.numeric(input$year_choice),
-             gender %in% input$degree_gender_choice) %>% 
-      group_by(state) %>% 
-      summarise(degrees = sum(degrees, na.rm = TRUE))
+  legend_title <- reactive({
+    if (input$map_metric == "cs_percent") return ("CS Percentage of Degrees")
+    if (input$map_metric == "cs_female_percent") return ("Female Percentage of CS")
+    if (input$map_metric == "cs_m_f_ratio") return ("Male to Female Ratio")
   })
   
-  cs_map_data <- reactive({
-    us_states %>% 
-      left_join(filtered_state(), by = c("NAME" = "state"))
+  output$degree_map <- renderPlotly({
+    
+    val_min <- min(nat_cs_ba[[input$map_metric]], na.rm = TRUE)
+    val_max <- max(nat_cs_ba[[input$map_metric]], na.rm = TRUE)
+  
+   
+    cs_ba_data <- us_states %>% 
+      left_join(nat_cs_ba %>% filter(year == input$map_year),
+                by = c("NAME" = "state"))
+    
+    p_degree_map <- ggplot(cs_ba_data) +
+      geom_sf(aes(fill = .data[[input$map_metric]],
+                  text = paste0("<b>", NAME, "</b><br>",
+                                input$map_metric, ": ",
+                                round(.data[[input$map_metric]], 2))),
+              color = "white", size = 0.1) +
+      scale_fill_viridis_c(name = legend_title(), option = "inferno", limits = c(val_min, val_max)) +
+      theme_void()
+    
+    ggplotly(p_degree_map)
     
   })
-  # degree(output)
-  output$cs_ba_map <- renderPlotly({
+ # Degree Map ends
+  
+  # Degree line chart
+  
+  output$trend_line_plot <- renderPlot({
     
-    p2 <- ggplot(cs_map_data()) +
-      geom_sf(aes(fill = degrees), color = "white") +
-      scale_fill_viridis_c(option = "E", trans = "sqrt") +
-      coord_sf(xlim = c(-125,-65), ylim = c(25, 50)) +
-      theme_minimal() +
-      theme(panel.background = element_rect(fill = "transparent", color = NA),
-            plot.background = element_rect(fill = "transparent", color = NA)) +
-      labs(fill = "CS BA Degrees",
-           title = paste("CS Bachelor Degrees in", input$year_choice))
+    national_avg <- nat_cs_ba %>% 
+      group_by(year) %>% 
+      summarise(avg_val = mean(.data[[input$map_metric]], na.rm = TRUE))
     
-    ggplotly(p2)
+    p_ba_trend <- ggplot() +
+      geom_line(data = nat_cs_ba %>% filter(state != "Oregon"),
+                aes(x = year, y = .data[[input$map_metric]], group = state),
+                color = "grey75", alpha = 0.5, size = 0.5) +
+      geom_line(data = national_avg,
+                aes(x = year, y = avg_val),
+                color = "#5d3a9b", linetype = "dashed", size = 1) +
+      geom_line(data = nat_cs_ba %>% filter(state == "Oregon"),
+                aes(x = year, y = .data[[input$map_metric]]),
+                color = "#E66100")+
+      labs(title = paste("Oregon's Trend in Awarding CS Bachelor Degree(2003-24)", 
+                         input$map_metric),
+           subtitle = "Bold line = Oregon | Dashed line = National Avg | Grey line = Other States",
+           x = "Year", y = "Value") +
+      theme_minimal()
+    
+    p_ba_trend
+    
   })
+  
+  # Degree line chart ends
   
 
-############################## TRENDS PLOT ##############################
+############################## TRENDS TAB ##############################
   
    filtered_cs <- reactive({
 

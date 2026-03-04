@@ -26,7 +26,7 @@ cs_ba_ratio <- cs_ba_clean %>%
   mutate(
     cs_female_percent = round((female/total_cs) * 100,digits = 2),
     cs_male_percent = round((male/total_cs)*100,digits = 2),
-    m_f_ratio = round(male/female, digits = 2)
+    m_f_ratio = ifelse(female == 0, NA, round(male/female, 2))
   ) %>% 
   select(completion_year,year, everything())
 
@@ -47,11 +47,25 @@ cs_ba_final <- cs_ba_ratio %>%
   select(completion_year,year, state,total_cs,total_all, everything(), cs_m_f_ratio = m_f_ratio)
 
 
+cs_ba_final <- cs_ba_final %>% 
+  mutate(
+    cs_percent = round((total_cs/total_all)*100, 2),
+    is_oregon = ifelse(state == "Oregon", "Oregon", "Other States")
+  )
 
-selected_year <- 2017
+
+saveRDS(cs_ba_final, "data/nat_cs_ba_final.rds")
 
 
-us_states <- states(cb = TRUE)
+# 
+# cs_growth_2016 <- cs_ba_final %>% 
+#   filter(year %in% c(2016, 2024)) %>% 
+#   group_by(state) %>% 
+#   summarise(
+#     cs_2016 = sum(total_cs)
+#   )
+
+map_data <- us_states
 
 selected_year <- 2017
 selected_gender <- "Female"
