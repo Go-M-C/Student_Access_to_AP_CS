@@ -261,13 +261,29 @@ ui <- page_navbar(
   
   # NATIONAL TRENDS
   nav_panel("Trends", icon = icon("chart-line"),
-            layout_sidebar(
-              sidebar = sidebar(
-                selectInput("level_choices", "Degree Level:", choices = c("bachelor", "master","doctor"))
+            
+            fluidPage(
+              
+              h2("U.S. Computer Science Degrees Trends(1965-24)"),
+              br(),
+              p("This part of the project depict multiple computer science 
+               degrees trends"),
+              
+              br(),
+              
+              layout_sidebar(
+                sidebar = sidebar(
+                selectInput("level_choices", "Degree Level:", 
+                            choices = c("All","Bachelor" = "bachelor", 
+                                        "Master" = "master",
+                                        "Doctor" = "doctor")),
+                selectInput("gender_choices", "Gender:",
+                            choices = c("All","Male", "Female"),
+                            selected = "Female")
               ),
-              card(plotlyOutput("trend_plot"))
+              card(plotlyOutput("cs_trend_plot"))
             )
-    
+            )
   ),#nav_panel(trends end)
   
   nav_spacer(),
@@ -663,35 +679,45 @@ server <- function(input, output){
   
    filtered_cs <- reactive({
 
-    cs %>%
-      filter(degree_level == input$degree_choice) %>%
-      filter(gender %in% input$trend_gender_choice)})
+     req(input$level_choices, input$gender_choices)
+     
+     trend_data <- nat_trend
+       
+       if(input$level_choices != "All") {
+         trend_data <- trend_data %>% 
+           filter(degree_level == input$level_choices)
+       }
+     
+       if (input$gender_choices != "All") {
+         trend_data <- trend_data %>% 
+           filter(gender == input$gender_choices)
+       }
+       
+     return(trend_data)
 
-  # trends(output)
+  })# trends(output)
 
   output$cs_trend_plot <- renderPlotly({
+    
 
-    p1 <- ggplot(filtered_cs(),
-                 aes(x = academic_year, y = value,color = gender)) +
-      geom_line(size = 1) +
+    p_trend <- ggplot(filtered_cs(),
+                 aes(x = academic_year, y = value,color = gender, group = gender)) +
+      geom_line(linewidth = 1) +
       geom_point(alpha = 0.5) +
       scale_y_continuous(labels = scales::comma) +
-      scale_x_continuous(breaks = seq(1965, 2022, by = 4))+
-      scale_color_manual(values = c("Male" = "#21908c", "Female" = "#440154")) +
+      scale_x_continuous(breaks = seq(1965, 2022, by = 5))+
+      scale_color_viridis_d(option = "virids", end = 0.8) +
       geom_vline(xintercept = 2016, linetype = "dashed", color = "grey70")+
       geom_vline(xintercept = 2020, linetype = "dashed", color = "red")+
-      annotate("text", x = 2016, y = max(filtered_cs()$value),
-               label = "AP Computer Science Principle introduced", 
-               angle = 90, vjust = -0.5, color = "grey50")+
       labs(title = paste(
-          "United States", tools::toTitleCase(input$degree_choice),
+          "United States", tools::toTitleCase(input$level_choices),
           "Degree Trends"
         ),
         x = "Academic Year",
         y = "Number of Degrees") +
       theme_minimal()
 
-    ggplotly(p1)
+    ggplotly(p_trend)
   })
   
 } #SERVER ENDS
