@@ -252,7 +252,7 @@ ui <- page_navbar(
                   )
                 ),
               card(
-                card_header("State by State Data Details"),
+                card_header("Details of State by State CS Bachelor Degrees"),
                 DT::DTOutput("state_data_table")
               )
                 )
@@ -620,8 +620,44 @@ server <- function(input, output){
     
   })
   
+  
   # Degree line chart ends
   
+  
+  # Degree interactive table
+  
+  output$state_data_table <-  DT::renderDT({
+    
+    nat_cs_ba_table <- nat_cs_ba %>% 
+      select(year, state, total_all, total_cs, cs_percent,male,
+             cs_male_percent,female,cs_female_percent,cs_m_f_ratio) %>% 
+      mutate(
+        year = as.factor(year),
+        state = as.factor(state),
+        across(where(is.numeric), ~round(., 2))
+      )
+    
+    datatable(nat_cs_ba_table,
+              colnames = c("Year", "State","Total BA Degrees Awarded",
+                           "Total CS BA Degrees Awarded", "CS BA(%)",
+                           "CS_Male","CS_Male(%)","CS_Female","CS_Female(%)",
+                           "Male/Female Ratio"),
+              class = "display",
+              style = "bootstrap4",
+              rownames = FALSE,
+              options = list(pageLength = 10, autoWidth = TRUE),
+              caption = htmltools::tags$caption(
+                style = 'caption-side:bottom;text-align:left;',
+                'Source: U.S. Department of Education, 
+                National Center for Education Statistics, 
+                Integrated Postsecondary Education Data System (IPEDS), 
+                Completions component final data (2001-02 - 2022-23) and provisional data (2023-24).'
+              )
+    )
+    
+  })
+  
+  # Degree interactive table
 
 ############################## TRENDS TAB ##############################
   
