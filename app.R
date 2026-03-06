@@ -45,6 +45,7 @@ or_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
 
 ui <- page_navbar(
   
+  id = "main_tabs",
   title = div(
     style = "display: flex; flex-direction:column; justify-content:center; line-height:1.2;",
     span("DATA SCIENCE CAPSTONE PROJECT",
@@ -57,7 +58,7 @@ ui <- page_navbar(
   header = tags$head(
     tags$style(HTML("
                     body{
-                    padding-top: 250px;
+                    padding-top: 150px;
                     }
                     h2{
                     padding-top:20px;
@@ -66,7 +67,7 @@ ui <- page_navbar(
                     }
                     .navbar{
                     z-index: 2000;
-                    backgroud-color: white;
+                    background-color: white;
                     border-bottom: 2px solid #dee2e6;
                     box-shadow: 0 2px 4px rgba(0,0,0,.05);
                     min-height: 80px;
@@ -119,7 +120,52 @@ ui <- page_navbar(
             p("The dashboard on each tab has multiple ways to filter what data is displayed. Feel free to 
               switch the category displayed by selecting or clicking on the provided interactive elements.
               When you switch categories, the dashboard will automatically update to refelct your selections.")
+            ),
+            
+            layout_columns(
+              col_widths = c(6,6),
+              fill = FALSE,
+              gap = "20px",
+              
+              card(
+                card_image(file = "www:/classparticipation.png", 
+                           style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
+                card_body(
+                  style = "text-align: center;height: 80px;display:flex;align-items:center;
+                  justify-content: center;",
+                  actionLink("go_to_participation", "Advanced Placement CS Participation", 
+                             style = "font-weight: bold; text-decoration: none;")
+                )
+              ),
+              card(
+                card_image(file = "www:/capacity.jpg", 
+                           style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
+                card_body(
+                  style = "text-align: center;",
+                  actionLink("go_to_capacity", "Snapshot of Oregon CS course", 
+                             style = "font-weight: bold; text-decoration: none;")
+                )
+              ),
+              card(
+                card_image(file = "www:/degree.jpg", 
+                           style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
+                card_body(
+                  style = "text-align: center;",
+                  actionLink("go_to_degree", "Computer Science Degree Attainment", 
+                             style = "font-weight: bold; text-decoration: none;")
+                )
+              ),
+              card(
+                card_image(file = "www:/Trends.png", 
+                           style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
+                card_body(
+                  style = "text-align: center;",
+                  actionLink("go_to_trends", "Historical Trends", 
+                             style = "font-weight: bold; text-decoration: none;")
+                )
+              ),
             )
+            
             ),#nav_panel("Welcome") ends
   
   # OREGON PARTICIPATION (2020-21)
@@ -313,6 +359,10 @@ ui <- page_navbar(
                             selected = "All")
               ),
               card(plotlyOutput("cs_trend_plot"))
+            ),
+            card(
+              card_header("Details of degrees in CS conferred by postsecondary institutions(1965-2022)"),
+              DT::DTOutput("trend_data_table")
             )
             )
   ),#nav_panel(trends end)
@@ -331,8 +381,23 @@ ui <- page_navbar(
 #############################################################################
 # SERVER
 
-server <- function(input, output){
+server <- function(input, output, session){
   
+  observeEvent(input$go_to_participation, {
+    updateNavbarPage(session, "main_tabs", selected = "Participation")
+  })
+  
+  observeEvent(input$go_to_capacity, {
+    updateNavbarPage(session, "main_tabs", selected = "Capacity")
+  })
+  
+  observeEvent(input$go_to_degree,{
+    updateNavbarPage(session, "main_tabs", selected = "CS Bachelor Degrees")
+  })
+  
+  observeEvent(input$go_to_trends,{
+    updateNavbarPage(session, "main_tabs", selected = "Trends")
+  })
 
 ############################## PARTICIPATION PLOT #######################
 
@@ -744,10 +809,32 @@ server <- function(input, output){
           "CS Degree Trends"
         ),
         x = "Academic Year",
-        y = "Number of Degrees") +
+        y = "Number of Degrees",
+        color = "Gender") +
       theme_minimal()
 
     ggplotly(p_trend)
+  })
+  
+  output$trend_data_table <- renderDT({
+    
+    datatable(nat_trend,
+              colnames = c("Year", "Degree Level","Gender","Degree conferred"),
+              class = "display",
+              style = "bootstrap4",
+              rownames = FALSE,
+              options = list(pageLength = 10, autoWidth = TRUE),
+              caption = htmltools::tags$caption(
+                style = 'caption-side:bottom;text-align:left;',
+                'Source: U.S. Department of Education, National Center for Education Statistics, 
+                Earned Degrees Conferred, 1964-65 through 1969-70; 
+                Higher Education General Information Survey (HEGIS), 
+                "Degrees and Other Formal Awards Conferred" surveys, 
+                1970-71 through 1985-86; Integrated Postsecondary Education Data System (IPEDS), 
+                "Completions Survey" (IPEDS-C:87-99); Completions component, 
+                IPEDS Fall 2000 through Fall 2021 (final data) and Fall 2022 (provisional data).  
+                (This table was prepared November 2023.)'
+              ))
   })
   
 } #SERVER ENDS
