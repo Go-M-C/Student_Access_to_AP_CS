@@ -87,32 +87,38 @@ ui <- page_navbar(
   
   nav_panel("Welcome", icon = icon("house"),
             fluidPage(
+              div(
+                style = "background-image: linear-gradient(150deg,#004d40 0%, #0072b2 80%);
+                padding: 100px 0px 150px 0px;
+                margin: 0px -40px 0px -40px;"
+              ),# top,right,bottom,left
+              
             h2("Project Overview"),
-            p("By 2026, the Computer Science for All initiative will reach its 
-               10-year milestone since its launch in the United States. 
+            p("This interactive dashboard intends to provide a data-informed picture of
+               computer science education in Oregon. By incorporating data from sources such as Civil Rights Data Collection(CRDC),
+               the National Center for Educational Statistics(NCES), and CODE.org, the dashbord focuses on depict
+              high school student's participation and access to computer science in the most recent year, as well as higher education attainment and its trends."),
+            p("This project is inspired by the Computer Science for All initiative that was launched 10 years ago in the United States. 
                The initiative marked a proactive move and a commitment 
                to expanding Computer Science (CS) education 
                from kindergarten through high school, 
                aiming to equip students with computational thinking (CT) skills 
                for participation in a fast-shifting and technology-driven economy."),
-            br(),
             p("In 2022, Oregon Department of Education (ODE) 
                and the Higher Education Coordination Commission (HECC) 
                initiated a statewide implementation plan to expand access 
                to CS education for all public-school students by the 2027-2028 academic year. 
                For school district leaders and educators, this raises important questions:"),
             br(),
-            p("-Who is currently participating in computer science courses?"),
-            p("-Are participation patterns changing over time?"),
-            p("-What does Oregon’s overall CS education ecosystem look like?"),
+            p("Who is participating in computer science courses?"),
+            p("Who is offering computer science courses?"),
+            p("What does higher education attainment look like in computer science?"),
             br(),
-            p("This interactive dashboard intends to provide a data-informed picture of 
-               computer science participation and degree attainment in Oregon by bringing together 
-               multiple public data source, including the Civil Rights Data Collection and 
-               the National Center for Educational Statistics, and CODE.org."),
-            br(),
-            p("Use the sidebar to navigate through national trends,
-               Oregon's landscape, and policy impact.")
+            p(strong("How to Use the Dashboard")),
+          
+            p("The dashboard on each tab has multiple ways to filter what data is displayed. Feel free to 
+              switch the category displayed by selecting or clicking on the provided interactive elements.
+              When you switch categories, the dashboard will automatically update to refelct your selections.")
             )
             ),#nav_panel("Welcome") ends
   
@@ -121,13 +127,19 @@ ui <- page_navbar(
   nav_panel("Participation", icon = icon("users"),
             
             fluidPage(
+              div(
+                style = "background-image: linear-gradient(135deg,#004d40 0%, #0072b2 70%);
+                padding: 100px 0px 150px 0px;
+                margin: 0px -40px 0px -40px;"
+              ),# top,right,bottom,left# top,right,bottom,left
+              
               h2("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
               br(),
               p("Advanced Placement (AP) courses are college-level classes offered in high school.
                 The courses are designed to provide high school students opportunities to earn college credit through exams."),
               
               br(),
-              plotlyOutput("participation_map", height = "85vh"),
+              plotlyOutput("participation_map", height = "65vh"),
               
               br(),
               layout_column_wrap(
@@ -165,6 +177,13 @@ ui <- page_navbar(
   nav_panel("Capacity", icon = icon("map"),
            
             fluidPage(
+              
+              div(
+                style = "background-image: linear-gradient(135deg,#004d40 0%, #0072b2 70%);
+                padding: 100px 0px 150px 0px;
+                margin: 0px -40px 0px -40px;"
+              ),# top,right,bottom,left
+              
               h2("Oregon Schools: Computer Science Course Capacity (2021-22)"),
               br(),
               p("This part of the project depict the breadth of computer science offerings beyond AP courses.
@@ -220,6 +239,12 @@ ui <- page_navbar(
             
             fluidPage(
               
+              div(
+                style = "background-image: linear-gradient(135deg,#004d40 0%, #0072b2 70%);
+                padding: 100px 0px 150px 0px;
+                margin: 0px -40px 0px -40px;"
+              ),# top,right,bottom,left
+              
               h2("U.S. Computer Science Degrees (2003-24)"),
               br(),
               p("This part of the project depict the computer science 
@@ -264,6 +289,12 @@ ui <- page_navbar(
             
             fluidPage(
               
+              div(
+                style = "background-image: linear-gradient(135deg,#004d40 0%, #0072b2 70%);
+                padding: 100px 0px 150px 0px;
+                margin: 0px -40px 0px -40px;"
+              ),# top,right,bottom,left
+              
               h2("U.S. Computer Science Degrees Trends(1965-24)"),
               br(),
               p("This part of the project depict multiple computer science 
@@ -274,12 +305,12 @@ ui <- page_navbar(
               layout_sidebar(
                 sidebar = sidebar(
                 selectInput("level_choices", "Degree Level:", 
-                            choices = c("All","Bachelor" = "bachelor", 
+                            choices = c("Bachelor" = "bachelor", 
                                         "Master" = "master",
                                         "Doctor" = "doctor")),
                 selectInput("gender_choices", "Gender:",
                             choices = c("All","Male", "Female"),
-                            selected = "Female")
+                            selected = "All")
               ),
               card(plotlyOutput("cs_trend_plot"))
             )
@@ -683,11 +714,9 @@ server <- function(input, output){
      
      trend_data <- nat_trend
        
-       if(input$level_choices != "All") {
          trend_data <- trend_data %>% 
            filter(degree_level == input$level_choices)
-       }
-     
+
        if (input$gender_choices != "All") {
          trend_data <- trend_data %>%
            filter(gender == input$gender_choices)
