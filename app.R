@@ -138,7 +138,7 @@ ui <- page_navbar(
                 )
               ),
               card(
-                card_image(file = "www:/capacity.jpg", 
+                card_image(file = "www:/edtech tree.jpg", 
                            style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
                 card_body(
                   style = "text-align: center;",
@@ -170,7 +170,7 @@ ui <- page_navbar(
   
   # OREGON PARTICIPATION (2020-21)
   
-  nav_panel("Participation", icon = icon("users"),
+  nav_panel("AP CS Participation", icon = icon("users"),
             
             fluidPage(
               div(
@@ -220,7 +220,7 @@ ui <- page_navbar(
   
   
   # OREGON ECOSYSTEM (2021-22)
-  nav_panel("Capacity", icon = icon("map"),
+  nav_panel("Beyond AP CS", icon = icon("map"),
            
             fluidPage(
               
@@ -230,7 +230,7 @@ ui <- page_navbar(
                 margin: 0px -40px 0px -40px;"
               ),# top,right,bottom,left
               
-              h2("Oregon Schools: Computer Science Course Capacity (2021-22)"),
+              h2("Oregon Schools: The Variety and Enrollment of Computer Science Course (2021-22)"),
               br(),
               p("This part of the project depict the breadth of computer science offerings beyond AP courses.
                 This includes Web Development, Cybersecurity, Information System, Information Technology,
@@ -281,7 +281,7 @@ ui <- page_navbar(
   
   # POST SECONDARY DEGREES
   
-  nav_panel("CS Bachelor Degrees", icon = icon("graduation-cap"),
+  nav_panel("CS Degrees", icon = icon("graduation-cap"),
             
             fluidPage(
               
@@ -384,15 +384,15 @@ ui <- page_navbar(
 server <- function(input, output, session){
   
   observeEvent(input$go_to_participation, {
-    updateNavbarPage(session, "main_tabs", selected = "Participation")
+    updateNavbarPage(session, "main_tabs", selected = "AP CS Participation")
   })
   
   observeEvent(input$go_to_capacity, {
-    updateNavbarPage(session, "main_tabs", selected = "Capacity")
+    updateNavbarPage(session, "main_tabs", selected = "Beyond AP CS")
   })
   
   observeEvent(input$go_to_degree,{
-    updateNavbarPage(session, "main_tabs", selected = "CS Bachelor Degrees")
+    updateNavbarPage(session, "main_tabs", selected = "CS Degrees")
   })
   
   observeEvent(input$go_to_trends,{
