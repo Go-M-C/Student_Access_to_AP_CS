@@ -313,9 +313,9 @@ ui <- page_navbar(
                   layout_columns(
                     col_widths = c(4,8),
                     selectInput("map_metric", "Select Metric: ",
-                                choices = c("CS Percentage of All Degrees" = "cs_percent",
-                                            "Female Percentage of CS Degrees" = "cs_female_percent",
-                                            "Male to Female CS Ratio" = "cs_m_f_ratio")),
+                                choices = c("Percentage of CS of All Degrees" = "cs_percent",
+                                            "Percentage of Female Students" = "cs_female_percent"
+                                            )),
                     sliderInput("map_year", "Select Year: ",
                                 min = 2003, max = 2024, value = 2024,
                                 sep = "", animate = TRUE) 
@@ -351,9 +351,9 @@ ui <- page_navbar(
               layout_sidebar(
                 sidebar = sidebar(
                 selectInput("level_choices", "Degree Level:", 
-                            choices = c("Bachelor" = "bachelor", 
-                                        "Master" = "master",
-                                        "Doctor" = "doctor")),
+                            choices = c("Bachelor's" = "bachelor", 
+                                        "Master's" = "master",
+                                        "Doctoral" = "doctor")),
                 selectInput("gender_choices", "Gender:",
                             choices = c("All","Male", "Female"),
                             selected = "All")
@@ -553,7 +553,7 @@ server <- function(input, output, session){
   })# Gender plot ends
     
   
-############################# CAPACITY TAB #######################
+############################# BEYOND CS AP TAB #######################
   
   all_subcategories <- sort(unique(eco_full_202122$subcategory))
   
@@ -676,8 +676,7 @@ server <- function(input, output, session){
   
   legend_title <- reactive({
     if (input$map_metric == "cs_percent") return ("CS Percentage of Degrees")
-    if (input$map_metric == "cs_female_percent") return ("Female Percentage of CS")
-    if (input$map_metric == "cs_m_f_ratio") return ("Male to Female Ratio")
+    if (input$map_metric == "cs_female_percent") return ("Percentage of Female Students")
   })
   
   output$degree_map <- renderPlotly({
@@ -722,8 +721,7 @@ server <- function(input, output, session){
       geom_line(data = nat_cs_ba %>% filter(state == "Oregon"),
                 aes(x = year, y = .data[[input$map_metric]]),
                 color = "#E66100")+
-      labs(title = paste("Oregon's Trend in Awarding CS Bachelor Degree(2003-24)", 
-                         input$map_metric),
+      labs(title = "Oregon's Trend in Awarding CS Bachelor Degree(2003-24)",
            subtitle = "Bold line = Oregon | Dashed line = National Avg | Grey line = Other States",
            x = "Year", y = "Value") +
       theme_minimal()
@@ -746,18 +744,21 @@ server <- function(input, output, session){
       mutate(
         year = as.factor(year),
         state = as.factor(state),
-        across(where(is.numeric), ~round(., 2))
+        across(where(is.numeric), ~round(., 2)),
+        cs_m_f_ratio = paste0(round(cs_m_f_ratio, 1), "x")
       )
     
     datatable(nat_cs_ba_table,
               colnames = c("Year", "State","Total BA Degrees Awarded",
                            "Total CS BA Degrees Awarded", "CS BA(%)",
                            "CS_Male","CS_Male(%)","CS_Female","CS_Female(%)",
-                           "Male/Female Ratio"),
+                           "Likelihood (Male students are this number of times
+                           as likely to obtain a CS degree, 
+                           compared with female students)"),
               class = "display",
               style = "bootstrap4",
               rownames = FALSE,
-              options = list(pageLength = 10, autoWidth = TRUE),
+              options = list(scrollX = TRUE, autoWidth = TRUE),
               caption = htmltools::tags$caption(
                 style = 'caption-side:bottom;text-align:left;',
                 'Source: U.S. Department of Education, 
