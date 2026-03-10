@@ -6,6 +6,7 @@ library(bsicons)
 # For data wrangling
 library(dplyr)
 library(ggplot2)
+library(patchwork)
 library(scales)
 library(here)
 library(plotly)
@@ -40,6 +41,7 @@ nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
 ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
 or_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
+or_locale_summary <- readRDS("data/locale_summary.rds")
 
 ########################## UI DESIGN ##################################
 
@@ -259,7 +261,7 @@ ui <- page_navbar(
               ),
               card(
                 height = "450px",
-                card_header("Summary Table: Ecosystem Variety"),
+                card_header("CS Course Access Rate by Locale"),
                 DT::DTOutput("eco_summary_table")
               ),
             ),
@@ -271,8 +273,13 @@ ui <- page_navbar(
               width = 1/2,
               card(
                 height = "450px",
-                card_header("Statewide Course Distribution"),
+                card_header("Oregon High School CS Course Distribution"),
                 plotlyOutput("eco_subcategory_bar_chart", height = "400px")
+              ),
+              card(
+                height = "450px",
+                card_header("Oregon High School Demographics"),
+                plotOutput("p_demo", height = "400px")
               )
               )
             )
@@ -631,7 +638,7 @@ server <- function(input, output, session){
       or_eco_summary,
       colnames = c("Locale", "Total Schools", "Number of Schools with CS",
                    "9-12 Enrollment", "Avg School Size", "Total Offerings",
-                   "Capacity per 100 HS", "Avg Variety"),
+                   "CS Access Rate (per 100 students)", "Avg Categories"),
       rownames = FALSE,
       options = list(
         dom = "t", #no filter boxes,
@@ -668,8 +675,32 @@ server <- function(input, output, session){
     
   })
   
-  # ECO subcategory chart
+  # ECO subcategory chart ends
   
+  # ECO Combined locale plot
+  output$p_demo <- renderPlot({
+    
+    locale_long <- or_locale_summary %>% 
+      pivot_longer(
+        cols = c(Hispanic, Asian,White, Black, Native_Ha_Pa_Islander,American_Indian, Multi),
+        names_to = "Race",
+        values_to = "Student_Count"
+      )
+    
+    p_demo <- ggplot(locale_long, aes(x = locale, y = Student_Count, fill = Race)) +
+      geom_bar(stat = "identity", position = "fill")+
+      scale_y_continuous(labels = percent_format()) +
+      scale_fill_brewer(palette = "Set3", name = "Race/Ethnicity")+
+      labs(
+        title = "Oregon High School Demographics",
+        x = NULL,
+        y = "Demographic (%)") +
+      theme_minimal()
+    
+    p_demo
+  })
+  
+  # ECO Combined locale plot ends
 ############################## DEGREE TAB ##############################
   
   # Degree Map
