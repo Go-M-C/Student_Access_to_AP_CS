@@ -60,7 +60,7 @@ ui <- page_navbar(
   header = tags$head(
     tags$style(HTML("
                     body{
-                    padding-top: 150px;
+                    padding-top: 100px;
                     }
                     h2{
                     padding-top:20px;
@@ -93,14 +93,16 @@ ui <- page_navbar(
               div(
                 style = "background-image: linear-gradient(150deg,#004d40 0%, #0072b2 80%);
                 padding: 100px 0px 150px 0px;
-                margin: 0px -40px 0px -40px;"
+                margin: 0px -40px 0px -40px;
+                "
               ),# top,right,bottom,left
-              
-            h2("Project Overview"),
+            h2("Project Overview", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
             p("This interactive dashboard intends to provide a data-informed picture of
-               computer science education in Oregon. By incorporating data from sources such as Civil Rights Data Collection(CRDC),
-               the National Center for Educational Statistics(NCES), and CODE.org, the dashbord focuses on depict
-              high school student's participation and access to computer science in the most recent year, as well as higher education attainment and its trends."),
+               computer science education in Oregon."),
+            p("By incorporating data from Civil Rights Data Collection(CRDC),
+               the National Center for Educational Statistics(NCES), and CODE.org, the dashbord focuses on depict Oregon
+              high school student's participation and access to computer science in the most recent year. 
+              Also included is an overview of higher education attainment in CS and its national trends during the past 50 years."),
             p("This project is inspired by the Computer Science for All initiative that was launched 10 years ago in the United States. 
                The initiative marked a proactive move and a commitment 
                to expanding Computer Science (CS) education 
@@ -112,17 +114,43 @@ ui <- page_navbar(
                initiated a statewide implementation plan to expand access 
                to CS education for all public-school students by the 2027-2028 academic year. 
                For school district leaders and educators, this raises important questions:"),
-            br(),
-            p("Who is participating in computer science courses?"),
-            p("Who is offering computer science courses?"),
-            p("What does higher education attainment look like in computer science?"),
-            br(),
-            p(strong("How to Use the Dashboard")),
-          
-            p("The dashboard on each tab has multiple ways to filter what data is displayed. Feel free to 
-              switch the category displayed by selecting or clicking on the provided interactive elements.
-              When you switch categories, the dashboard will automatically update to refelct your selections.")
+            tags$ul(
+              style = "font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type: '-'",
+              tags$li(
+                strong("Who is participating in advanced computer science courses?")
+              ),
+              tags$li(
+                strong("Who is offering computer science courses?")
+              ),
+              tags$li(
+                strong("What does higher education attainment look like in computer science?")
+              )
             ),
+            
+            h3("Data", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
+            tags$ul(
+              style = "font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type:'-'",
+              tags$li(
+                p("ODE School level data 2020/21 - 2021/22"),
+                p("Enrollment, demographics")
+                ),
+              tags$li(
+                p("CRDC School level data 2020/21"),
+                p("Advanced Placement CS enrollment, demographics, gender")
+                ),
+              tags$li(
+                p("CODE.ORG School level data 2021/22"),
+                p("Subcatory of CS courses, locale, school location")
+              )
+            ),
+            
+            h3("How to Use the Dashboard", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
+            
+            p("The dashboard on each tab has multiple ways to filter what data is displayed. Feel free to 
+              switch between categories by selecting or clicking on the provided interactive elements, 
+              the dashboard will automatically update to refelct your selections."),
+            
+            h3("Explore the Insights", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
             
             layout_columns(
               col_widths = c(6,6),
@@ -168,7 +196,7 @@ ui <- page_navbar(
               ),
             )
             
-            ),#nav_panel("Welcome") ends
+            )),#nav_panel("Welcome") ends
   
   # OREGON PARTICIPATION (2020-21)
   
