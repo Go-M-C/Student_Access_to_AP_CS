@@ -116,6 +116,7 @@ saveRDS(or_apcs_202021, "data/or_apcs_202021.rds")
 # Analysis
 
 or_hs_enrollment <- or_fall_subset %>% 
+  filter(school_match != district_match) %>% 
   mutate(across(starts_with("grade_"), ~as.numeric(as.character(.)))) %>% 
   mutate(across(starts_with("grade_"), ~replace_na(., 0))) %>% 
   mutate(hs_enrollment = rowSums(across(c(grade_nine, grade_ten,
@@ -124,20 +125,33 @@ or_hs_enrollment <- or_fall_subset %>%
   filter(hs_enrollment > 0) %>% 
   select(school_match, district_match,hs_enrollment,total_enrollment_202021)
 
-ap_model <- or_ap_cs_prepared %>% 
-  inner_join(or_hs_enrollment, by = c("school_match", "district_match")) %>% 
+ap_model <- or_hs_enrollment %>% 
+  left_join(or_ap_cs_prepared, by = c("school_match", "district_match")) %>% 
   left_join(or_geo_simple, by = c("school_match", "district_match")) %>% 
-  filter(!is.na(locale)) %>% 
   mutate(
-    has_ap_cs = if_else(cs_ap_total>0, 1, 0),
+    has_ap_cs = if_else(!is.na(cs_ap_total) & cs_ap_total>0, 1, 0),
+    cs_ap_total = replace_na(cs_ap_total, 0),
+    locale = as.character(locale),
+    locale = replace_na(locale),
     locale = as.factor(locale)
   ) %>% 
   select(school_match,school_name,district_match,district_name,
          total_enrollment_202021, hs_enrollment,
-         lat, lon,locale,has_ap_cs,cs_ap_total, everything())
-  
-saveRDS(ap_model, "data/ap_cs_model.rds")
-logit_model <- glm(has_ap_cs ~ hs_enrollment + locale,
+         lat, lon,locale,has_ap_cs,cs_ap_total, everything()) %>% 
+  filter(hs_enrollment > 0)
+
+ap_model_classified <- ap_model %>% 
+  mutate(
+    mapping_status = if_else(!is.na(lat) & !is.na(lon),
+                          "Mapped School",
+                          "Unmapped Program"),
+    locale_report = if_else(mapping_status == "Unmapped Program", "Non-Traditional Program", as.character(locale))
+  )
+
+saveRDS(ap_model_classified, "data/ap_cs_model.rds")
+
+
+logit_model <- glm(has_ap_cs ~ locale + size,???
                    data = ap_model,
                    family = binomial)
 summary(logit_model)
@@ -155,8 +169,8 @@ ggplot(ap_model, aes(x = hs_enrollment, y = has_ap_cs))+
     y = "Probability (0 to 1)"
   )
 
-locale_summary <- ap_model %>% 
-  group_by(locale) %>% 
+locale_summary <- ap_model_classified %>% 
+  group_by(locale_report) %>% 
   summarise(
     total_schools = n(),
     schools_with_cs = sum(has_ap_cs, na.rm = TRUE),

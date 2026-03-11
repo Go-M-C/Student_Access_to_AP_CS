@@ -115,7 +115,7 @@ ui <- page_navbar(
                to CS education for all public-school students by the 2027-2028 academic year. 
                For school district leaders and educators, this raises important questions:"),
             tags$ul(
-              style = "font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type: '-'",
+              style = "padding-left: 20px;font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type: ' - '",
               tags$li(
                 strong("Who is participating in advanced computer science courses?")
               ),
@@ -124,23 +124,6 @@ ui <- page_navbar(
               ),
               tags$li(
                 strong("What does higher education attainment look like in computer science?")
-              )
-            ),
-            
-            h3("Data", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
-            tags$ul(
-              style = "font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type:'-'",
-              tags$li(
-                p("ODE School level data 2020/21 - 2021/22"),
-                p("Enrollment, demographics")
-                ),
-              tags$li(
-                p("CRDC School level data 2020/21"),
-                p("Advanced Placement CS enrollment, demographics, gender")
-                ),
-              tags$li(
-                p("CODE.ORG School level data 2021/22"),
-                p("Subcatory of CS courses, locale, school location")
               )
             ),
             
@@ -194,6 +177,30 @@ ui <- page_navbar(
                              style = "font-weight: bold; text-decoration: none;")
                 )
               ),
+            ),
+            h3("Data", style = "text-align: left; margin-bottom: 30px;color:#ab9f7a"),
+            tags$ul(
+              style = "padding-left:20px;font-size: 1.1rm; line-height:1.8;margin-bottom:30px;list-style-type: '  -  '",
+              tags$li(
+                p("ODE School level data 2020/21 - 2021/22"),
+                p("Enrollment, demographics")
+              ),
+              tags$li(
+                p("CRDC School level data 2020/21"),
+                p("Advanced Placement CS enrollment, demographics, gender")
+              ),
+              tags$li(
+                p("CODE.ORG School level data 2021/22"),
+                p("Subcatory of CS courses, locale, school location")
+              ),
+              tags$li(
+                p("NCES State level data 1964/65-2021/22"),
+                p("Conferred number of degrees, state, degree level, gender, completion year")
+              ),
+              tags$li(
+                p("NCES State level data 2002/03-2023/24"),
+                p("Number of bachelor degees/certificates awarded, state, completion year")
+              )
             )
             
             )),#nav_panel("Welcome") ends
@@ -211,13 +218,29 @@ ui <- page_navbar(
               
               h2("Oregon Schools: Total Enrollment vs. AP CS Participation (2020-21)"),
               br(),
-              p("Advanced Placement (AP) courses are college-level classes offered in high school.
-                The courses are designed to provide high school students opportunities to earn college credit through exams."),
+              h4("Introduction"),
+              p("Advanced Placement (AP) courses are college-level classes offered in high schools, providing
+              students the opportunity to earn college credit through structured coursework and standardized exam. 
+              Though taking the AP courses is not a prerequisite for the exams,
+                students are encouraged to take the AP course as a preparation for this high-stake exam. 
+                This part of analyisis focus on AP Computer Science (AP CS) participation in Oregon."),
+              h4("Data"),
+              p("The final dataset is prepared through joining several dataset from the 2020-21 academic year: "), 
+              p("Civil Rights Data Collection (CRDC) from the U.S. Department of Education provides student enrollment in AP CS, 
+              disaggregated by race/ethnicity, and gender."),
+              p("ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
+              p("Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
+              p("This multi-source dataset allow us to examine equity gaps by the physical locations of the schools."),
               
-              br(),
+              
+              h4("AP CS Participation Map"),
+              p("This interactive map visualizes the distribution of AP CS access across Oregon. Each circle represents a unique high school.
+              The size of the circle correspons to the school's total enrollment, while the color indicates whether the school reported AP CS participation.
+              Hover over any circle to view specific school name, district, and total student number."),
               plotlyOutput("participation_map", height = "65vh"),
               
               br(),
+              h4("Findings"),
               layout_column_wrap(
                 width = 1/2,
                 card(height = "450px",
@@ -231,8 +254,6 @@ ui <- page_navbar(
                      ),
               ),
               
-              p("ADDING TEXT HERE TO DESCRIBE THE ANALYSIS"),
-              
               br(),
               layout_column_wrap(
                 width = 1/2,
@@ -242,11 +263,48 @@ ui <- page_navbar(
                 card(height = "450px",
                      card_header("Statewide Gender(AP CS)"),
                      plotlyOutput("gender_bar_plot", height ="400px"))
-              )
+              ),
               
-            )
+              br(),
+              
+              tags$ul(
+                style = "padding-left:20px;font-size: 1.1rm; line-height:1.8;
+                margin-bottom:30px;list-style-type: '  -  '",
+                tags$li(
+                  p("Percentage of Students with AP CS by Locale"),
+                  p("In the 2020-21 academic year, Oregon's high school landscape shows access divide in AP Computer Science availability. 
+                  With the available data, we identified 329 tranditional high schools with valid geographic data. The 'Access Rate'(the percentage
+                  of schools offering the AP CS course) varies differently by locale: "),
+                  p("Suburban area has the highest AP CS participation. Among the 47 suburban high schools identified, 17% offered AP CS.
+                  When look at the rural area, among 131 high schools, only 2 schools reported AP CS enrollment. The access rate in this area is just 1.5%.
+                    It is even interesting given that the average enrollment in the rural schools is 37, impling higher student teacher ratio
+                    and needs for staffing supports"),
+                  p("The highest access rate appears(18%) in the City area, but the average enrollment in AP CS course is considerably low(16.9) 
+                    given the average enrollment in this area is as high as 1023. Town area also has a lower access rate(5.6%).")
+                ),
+                tags$li(
+                  p("Percentage of Students with AP CS by race/ethnicity"),
+                  p("Historically underrepresented students continue to face persistent opportunity gaps."),
+                  p("The 2020-21 data reveals a large percentage of enrollment within specific demographics:"),
+                  p("White students: 61.3% of all AP CS enrollments."),
+                  p("Asian students: 17%"),
+                  p("Hispanic students: 14%"),
+                  p("Other Groups: Black, Native American, Havaii and Pacific Islander, and Multi-racial students representing
+                    the remaining share.")),
+                  br(),
+                tags$li(
+                  p("Gender disparity remains one of the most visible gaps in this dataset."),
+                  p("Female students: 158(approximatly 25%"),
+                  p("Male students: 459(approximatly 75%)")
+                )
+              
+            ),
+            h4("Sources"),
+            p("U.S. Department of Education, Office for Civil Rights, 2020-21 Civil Rights Data Collection (CRDC) Reports."),
+            p("Oregon Department of Education, 2020-21 Student Membership Reports"),
+            p("CODE.org, 2021-22 Oregon Course Mapping")
             
-              ), #nav_panel("Participation") ends
+              )), #nav_panel("Participation") ends
   
   
   # OREGON ECOSYSTEM (2021-22)
@@ -262,11 +320,21 @@ ui <- page_navbar(
               
               h2("Oregon Schools: The Variety and Enrollment of Computer Science Course (2021-22)"),
               br(),
-              p("This part of the project depict the breadth of computer science offerings beyond AP courses.
-                This includes Web Development, Cybersecurity, Information System, Information Technology,
-                Foundational CS, and Core CS. The course variety represent the diverse pathways available to Oregon Students"),
+              h4("Introduction"),
+              p("While AP CS courses participation(2020-21) show students involvement in academic tracks, this 2021-22 data reflects the state's landscape of CS course variety.
+              It represents the diverse pathways available to Oregon Students and school-level initiative of taking actions to offer CS to students. The course subcategroies inlcude
+              Web Development, Cybersecurity, Information System, Information Technology, Foundational CS, and Core CS."),
+              h4("Data"),
+              p("The final dataset is prepared through joining several dataset from the 2021-22 academic year: "),
+              p("ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
+              p("Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
               
-              br(),
+              
+              h4("Oregon High School CS Course Map"),
+              p("This interactive map visualizes the variety of CS course offered across Oregon. 
+                Each circle represents a unique high school. The size of the circle correspons to the relative number of CS course count, 
+                while the color indicates which course is offered. Hover over any circle to view specific school name, locale, and total CS course.
+                The map will automatically update to reflect your selections from the side bar."),
               layout_sidebar(
                 sidebar = sidebar(
                   selectInput("eco_locale_filter", "Filter by Locale: ",
@@ -280,6 +348,7 @@ ui <- page_navbar(
             ),
             
             br(),
+            h4("Findings"),
             layout_column_wrap(
               width = 1/2,
               card(
@@ -293,8 +362,6 @@ ui <- page_navbar(
                 DT::DTOutput("eco_summary_table")
               ),
             ),
-            p("Analysis: While AP CS courses participation(2020-21) show students involvement in academic tracks,
-              this 2021-22 capacity data reflects the state's landscape of CS capacity"),
             
             br(),
             layout_column_wrap(
@@ -309,7 +376,19 @@ ui <- page_navbar(
                 card_header("Oregon High School Demographics"),
                 plotOutput("p_demo", height = "400px")
               )
-              )
+              ),
+            
+            tags$ul(
+              style = "padding-left:20px;font-size: 1.1rm; line-height:1.8;
+                margin-bottom:30px;list-style-type: '  -  '",
+              tags$li("1"),
+              tags$li("2"),
+              tags$li("3")
+            ),
+            br(),
+            h4("Sources"),
+            p("Oregon Department of Education, 2021-22 Student Membership Reports"),
+            p("CODE.org, 2021-22 Oregon Course Mapping")
             )
             
             ),#nav_panel(Capacity) ends
