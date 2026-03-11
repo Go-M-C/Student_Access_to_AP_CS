@@ -148,11 +148,18 @@ ap_model_classified <- ap_model %>%
     locale_report = if_else(mapping_status == "Unmapped Program", "Non-Traditional Program", as.character(locale))
   )
 
+summary(ap_model_classified$hs_enrollment)
+
+ap_model_classified <- ap_model_classified %>% 
+  mutate(school_size = case_when(
+    hs_enrollment < 100
+  ))
+
 saveRDS(ap_model_classified, "data/ap_cs_model.rds")
 
 
-logit_model <- glm(has_ap_cs ~ locale + size,???
-                   data = ap_model,
+logit_model <- glm(has_ap_cs ~ locale + hs_enrollment,
+                   data = ap_model_classified,
                    family = binomial)
 summary(logit_model)
 

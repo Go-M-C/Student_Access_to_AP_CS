@@ -273,11 +273,11 @@ ui <- page_navbar(
                 tags$li(
                   p("Percentage of Students with AP CS by Locale"),
                   p("In the 2020-21 academic year, Oregon's high school landscape shows access divide in AP Computer Science availability. 
-                  With the available data, we identified 329 tranditional high schools with valid geographic data. The 'Access Rate'(the percentage
+                  With the available data, we identified 329 traditional high schools with valid geographic data. The 'Access Rate'(the percentage
                   of schools offering the AP CS course) varies differently by locale: "),
                   p("Suburban area has the highest AP CS participation. Among the 47 suburban high schools identified, 17% offered AP CS.
                   When look at the rural area, among 131 high schools, only 2 schools reported AP CS enrollment. The access rate in this area is just 1.5%.
-                    It is even interesting given that the average enrollment in the rural schools is 37, impling higher student teacher ratio
+                    It is even interesting given that the average enrollment in the rural schools is 37, implying higher student teacher ratio
                     and needs for staffing supports"),
                   p("The highest access rate appears(18%) in the City area, but the average enrollment in AP CS course is considerably low(16.9) 
                     given the average enrollment in this area is as high as 1023. Town area also has a lower access rate(5.6%).")
@@ -289,13 +289,13 @@ ui <- page_navbar(
                   p("White students: 61.3% of all AP CS enrollments."),
                   p("Asian students: 17%"),
                   p("Hispanic students: 14%"),
-                  p("Other Groups: Black, Native American, Havaii and Pacific Islander, and Multi-racial students representing
+                  p("Other Groups: Black, Native American, Hawaii and Pacific Islander, and Multi-racial students representing
                     the remaining share.")),
                   br(),
                 tags$li(
                   p("Gender disparity remains one of the most visible gaps in this dataset."),
-                  p("Female students: 158(approximatly 25%"),
-                  p("Male students: 459(approximatly 75%)")
+                  p("Female students: 158(approximately 25%"),
+                  p("Male students: 459(approximately 75%)")
                 )
               
             ),
@@ -385,10 +385,10 @@ ui <- page_navbar(
                       Given the large enrollment size, there is only 0.42 courses exist per 100 students,
                       the 4.35 variety means students can choose a more specialized pathway that fits their needs."),
               tags$li("Rural: Schools in this area are generally small. 
-                      Their access rate is the highest(1.06). The reason could be that one course in a tiny school creates a high ratio. 
+                      Their access rate is the highest (1.06). The reason could be that one course in a tiny school creates a high ratio. 
                       However, the 2.1 variety score suggests there are not many choices for a student in this area."),
               tags$li("White the variety of offerings is encouraging. 
-              It is critical for researchers and policy makers to understand the carriculum and learning objectives covered in these CS courses.
+              It is critical for researchers and policy makers to understand the curriculum and learning objectives covered in these CS courses.
                       It is an essential move to ensure students are gaining the high-level computational thinkings skills training.")
             ),
             br(),
@@ -483,10 +483,14 @@ ui <- page_navbar(
               
               h2("U.S. Computer Science Degrees Trends(1965-24)"),
               br(),
-              p("This part of the project depict multiple computer science 
-               degrees trends"),
-              
+              h4("Introduction"),
+              p("This part of the project uses longitudinal data that record the changing pattern 
+                of computer science by different degree levels"),
               br(),
+              h4("Data"),
+              p("Degrees in computer and information sciences conferred by postsecondary institutions, by level of degree and sex of 
+              student: Academic years 1964-65 through 2021-22"),
+              p("Level's of Degrees, gender"),
               
               layout_sidebar(
                 sidebar = sidebar(
@@ -879,14 +883,14 @@ server <- function(input, output, session){
                 aes(x = year, y = .data[[input$map_metric]], group = state),
                 color = "grey75", alpha = 0.5, size = 0.5) +
       geom_line(data = national_avg,
-                aes(x = year, y = avg_val),
-                color = "#5d3a9b", linetype = "dashed", size = 1) +
+                aes(x = year, y = avg_val, group = 1),
+                color = "#5d3a9b", linetype = "dashed", size = 1.2) +
       geom_line(data = nat_cs_ba %>% filter(state == "Oregon"),
                 aes(x = year, y = .data[[input$map_metric]]),
                 color = "#E66100")+
       labs(title = "Oregon's Trend in Awarding CS Bachelor Degree(2003-24)",
            subtitle = "Bold line = Oregon | Dashed line = National Avg | Grey line = Other States",
-           x = "Year", y = "Value") +
+           x = "Year", y = "Percentage") +
       theme_minimal()
     
     p_ba_trend
@@ -911,21 +915,28 @@ server <- function(input, output, session){
         cs_m_f_ratio = paste0(round(cs_m_f_ratio, 1), "x")
       )
     
+    display_names <- c(
+      "Year" = "year", 
+      "State" = "state",
+      "Total BA Degrees Awarded" = "total_all",
+      "Total CS BA Degrees Awarded" = "total_cs", 
+      "CS BA(%)" = "cs_percent",
+      "CS_Male" = "male",
+      "CS_Male(%)" = "cs_male_percent",
+      "CS_Female" = "female",
+      "CS_Female(%)" = "cs_female_percent",
+      "Likelihood" = "cs_m_f_ratio"
+    )
+    
     datatable(nat_cs_ba_table,
-              colnames = c("Year", "State","Total BA Degrees Awarded",
-                           "Total CS BA Degrees Awarded", "CS BA(%)",
-                           "CS_Male","CS_Male(%)","CS_Female","CS_Female(%)",
-                           "Likelihood"),
+              colnames = display_names,
               class = "display",
               style = "bootstrap4",
               rownames = FALSE,
               options = list(scrollX = TRUE, autoWidth = TRUE),
               caption = htmltools::tags$caption(
                 style = 'caption-side:bottom;text-align:left;',
-                'Source: U.S. Department of Education, 
-                National Center for Education Statistics, 
-                Integrated Postsecondary Education Data System (IPEDS), 
-                Completions component final data (2001-02 - 2022-23) and provisional data (2023-24).'
+                'Source: IPEDS Completions data (2002-2024)'
               )
     )
     
