@@ -226,11 +226,11 @@ ui <- page_navbar(
                 This part of analyisis focus on AP Computer Science (AP CS) participation in Oregon."),
               h4("Data"),
               p("The final dataset is prepared through joining several dataset from the 2020-21 academic year: "), 
-              p("Civil Rights Data Collection (CRDC) from the U.S. Department of Education provides student enrollment in AP CS, 
+              p(" - Civil Rights Data Collection (CRDC) from the U.S. Department of Education provides student enrollment in AP CS, 
               disaggregated by race/ethnicity, and gender."),
-              p("ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
-              p("Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
-              p("This multi-source dataset allow us to examine equity gaps by the physical locations of the schools."),
+              p(" - ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
+              p(" - Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
+              p(" - This multi-source dataset allow us to examine equity gaps by the physical locations of the schools."),
               
               
               h4("AP CS Participation Map"),
@@ -321,13 +321,13 @@ ui <- page_navbar(
               h2("Oregon Schools: The Variety and Enrollment of Computer Science Course (2021-22)"),
               br(),
               h4("Introduction"),
-              p("While AP CS courses participation(2020-21) show students involvement in academic tracks, this 2021-22 data reflects the state's landscape of CS course variety.
-              It represents the diverse pathways available to Oregon Students and school-level initiative of taking actions to offer CS to students. The course subcategroies inlcude
+              p("While AP CS courses(2020-21) reflects participation in high-level academic tracks, this 2021-22 data shows the state's landscape of CS variety in Oregon.
+              It represents the diverse pathways available to Oregon Students and school-level initiative to offer CS beyond traditional learning. These offerings include
               Web Development, Cybersecurity, Information System, Information Technology, Foundational CS, and Core CS."),
               h4("Data"),
               p("The final dataset is prepared through joining several dataset from the 2021-22 academic year: "),
-              p("ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
-              p("Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
+              p(" - ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
+              p(" - Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
               
               
               h4("Oregon High School CS Course Map"),
@@ -381,9 +381,15 @@ ui <- page_navbar(
             tags$ul(
               style = "padding-left:20px;font-size: 1.1rm; line-height:1.8;
                 margin-bottom:30px;list-style-type: '  -  '",
-              tags$li("1"),
-              tags$li("2"),
-              tags$li("3")
+              tags$li("City: Schools in this area serve massive populations. On average, each school has 1,043 students. 
+                      Given the large enrollment size, there is only 0.42 courses exist per 100 students,
+                      the 4.35 variety means students can choose a more specialized pathway that fits their needs."),
+              tags$li("Rural: Schools in this area are generally small. 
+                      Their access rate is the highest(1.06). The reason could be that one course in a tiny school creates a high ratio. 
+                      However, the 2.1 variety score suggests there are not many choices for a student in this area."),
+              tags$li("White the variety of offerings is encouraging. 
+              It is critical for researchers and policy makers to understand the carriculum and learning objectives covered in these CS courses.
+                      It is an essential move to ensure students are gaining the high-level computational thinkings skills training.")
             ),
             br(),
             h4("Sources"),
@@ -407,11 +413,21 @@ ui <- page_navbar(
               
               h2("U.S. Computer Science Degrees (2003-24)"),
               br(),
-              p("This part of the project depict the computer science 
-                degree awarded by the 4-year institutions in the U.S."),
-              
+              h4("Introduction"),
+              p("This section presents the conferred bachelor degrees in computer science 
+                degree. By tracking data from 2003 to 2024, this tab provides visualization of how each states responding to the surging needs for talents with CS degrees.
+                It also offers an overview of where Oregon posits among the rest of states."),
+              h4("Data"),
+              p("U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS)"),
+              p(" - Number of degrees/certificates awarded at postsecondary institutions, by state and gender, CIP Code 11"),
+              p(" - Number of degrees/certificates awarded at postsecondary institutions, by state and CIP code"),
               br(),
               
+              h4("CS Degrees State Map"),
+              p("This interactive map visualizes the changing proportion of Computer Science among all bachelor degress over 21 years.
+              It allows for a directcomparison of Oregon's degree output against national average.
+              Hover over any state to view state name and the percentage of CS bachelor degrees.
+                The map will automatically update to reflect your selections of year and metrics from the side bar."),
               layout_columns(
                 col_widths = c(7,5),
                 card(
@@ -422,6 +438,7 @@ ui <- page_navbar(
                   card_header("Oregon and Other States vs. the National Average(%)"),
                   plotOutput("trend_line_plot", height = "500px")
                 )),
+              br(),
               card(
                 card_body(
                   layout_columns(
@@ -436,10 +453,19 @@ ui <- page_navbar(
                     )
                   )
                 ),
+              br(),
               card(
                 card_header("Details of State by State CS Bachelor Degrees"),
                 DT::DTOutput("state_data_table")
-              )
+              ),
+              br(),
+              h5("In this table, likelyhood means how much times male students are
+                           as likely to obtain a CS degree, 
+                           compared with female students"),
+              br(),
+              h4("Source"),
+              p(" - U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS), 
+                Completions component final data (2001-02 - 2022-23) and provisional data (2023-24).")
                 )
               
   ), #nav_panel(cs ba degrees ends)
@@ -716,7 +742,6 @@ server <- function(input, output, session){
   output$eco_locale_bar_plot <- renderPlotly({
     
     locale_course <- eco_full_202122 %>% 
-      filter(number_of_courses > 0) %>% 
       group_by(locale) %>% 
       summarise(Total_Offerings = sum(number_of_courses, na.rm = TRUE),
                 Avg_Variety = round(sum(number_of_courses)/n_distinct(school_match), 2),
@@ -890,9 +915,7 @@ server <- function(input, output, session){
               colnames = c("Year", "State","Total BA Degrees Awarded",
                            "Total CS BA Degrees Awarded", "CS BA(%)",
                            "CS_Male","CS_Male(%)","CS_Female","CS_Female(%)",
-                           "Likelihood (Male students are this number of times
-                           as likely to obtain a CS degree, 
-                           compared with female students)"),
+                           "Likelihood"),
               class = "display",
               style = "bootstrap4",
               rownames = FALSE,

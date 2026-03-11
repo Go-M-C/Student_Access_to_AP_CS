@@ -275,7 +275,7 @@ locale_demo_plot <- eco_enroll_202122 %>%
          grade_ten = as.numeric(as.character(grade_ten)),
          grade_eleven = as.numeric(as.character(grade_eleven)),
          grade_twelve = as.numeric(as.character(grade_twelve))) %>%
-  mutate(hs_total = grade_nine+grade_ten+grade_eleven+grade_twelve) %>%
+  mutate(hs_total = rowSums(across(c(grade_nine,grade_ten,grade_eleven,grade_twelve)), na.rm = TRUE)) %>%
   mutate(across(c(hispanic,asian, white,black,american_indian, native_ha_pa_islander, multi_racial),
          ~as.numeric(as.character(.x)))) %>% 
   filter(hs_total > 0) %>% 
