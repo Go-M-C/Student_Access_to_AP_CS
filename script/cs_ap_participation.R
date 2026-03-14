@@ -6,6 +6,7 @@ library(sf)
 library(plotly)
 library(readr)
 library(dplyr)
+library(logistf)
 # read in 20-21 enrollment data from ODE
 # read in 20-21 Oregon AP course count data from CRDC
 # ==============================PARTICIPATION========================#
@@ -148,33 +149,42 @@ ap_model_classified <- ap_model %>%
     locale_report = if_else(mapping_status == "Unmapped Program", "Non-Traditional Program", as.character(locale))
   )
 
-summary(ap_model_classified$hs_enrollment)
+# summary(ap_model_classified$hs_enroll_100)
 
 ap_model_classified <- ap_model_classified %>% 
   mutate(school_size = case_when(
-    hs_enrollment < 100
-  ))
+    hs_enrollment <= 35 ~ "Small",
+    hs_enrollment > 35 & hs_enrollment <= 493 ~ "Medium",
+    hs_enrollment > 493 ~ "Large"
+  ),
+  school_size = factor(school_size, levels = c("Small","Medium","Large")),
+  locale = relevel(factor(locale), ref = "Rural")
+  )
+
+ap_model_classified$hs_enroll_100 <- ap_model_classified$hs_enrollment/100
 
 saveRDS(ap_model_classified, "data/ap_cs_model.rds")
 
 
-logit_model <- glm(has_ap_cs ~ locale + hs_enrollment,
+ap_logit_model <- glm(has_ap_cs ~ locale + hs_enroll_100,
                    data = ap_model_classified,
                    family = binomial)
-summary(logit_model)
 
-exp(coef(logit_model))
+model_odds <- exp(cbind(odds_ratio = coef(logit_model), confint(logit_model)))
+model_odds
 
-ggplot(ap_model, aes(x = hs_enrollment, y = has_ap_cs))+
-  geom_point(aes(color = locale), alpha = 0.5) +
-  stat_smooth(method = "glm", method.args = list(family = "binomial"),
-              se = TRUE, color = "#ab9f7a") +
-  theme_minimal()+
-  labs(
-    title = "Probability of Offering AP CS by School Size",
-    x = "High School Enrollment",
-    y = "Probability (0 to 1)"
-  )
+saveRDS(ap_logit_model, "data/ap_logit_model.rds")
+
+# ggplot(ap_model, aes(x = hs_enrollment, y = has_ap_cs))+
+#   geom_point(aes(color = locale), alpha = 0.5) +
+#   stat_smooth(method = "glm", method.args = list(family = "binomial"),
+#               se = TRUE, color = "#ab9f7a") +
+#   theme_minimal()+
+#   labs(
+#     title = "Probability of Offering AP CS by School Size",
+#     x = "High School Enrollment",
+#     y = "Probability (0 to 1)"
+#   )
 
 locale_summary <- ap_model_classified %>% 
   group_by(locale_report) %>% 
@@ -189,10 +199,8 @@ locale_summary <- ap_model_classified %>%
 
 saveRDS(locale_summary, "data/ap_cs_locale_summary.rds")
 
-table(ap_model$locale, ap_model$has_ap_cs)
 
 
-ggplot(ap_model, aes(x = locale, y = ))
 
 # ================================BEYOND AP CS=======================#
 or_fall_raw_2122 <- read_xlsx(here("data","fallmembershipreport_20212022.xlsx"),sheet = 4) %>% 
