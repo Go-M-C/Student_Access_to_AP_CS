@@ -40,8 +40,10 @@ nat_cs_ba <- readRDS("data/nat_cs_ba_final.rds")
 nat_trend <- readRDS("data/nat_cs_trends.rds")
 ap_cs_model <- readRDS("data/ap_cs_model.rds")
 ap_locale_summary <- readRDS("data/ap_cs_locale_summary.rds")
+ap_logit_model <- readRDS("data/ap_logit_model.rds")
 or_eco_summary <- readRDS("data/or_eco_locale_summary.rds")
 or_locale_summary <- readRDS("data/locale_summary.rds")
+
 
 ########################## UI DESIGN ##################################
 
@@ -253,20 +255,6 @@ ui <- page_navbar(
                      DT::DTOutput("ap_locale_summary_table")
                      ),
               ),
-              
-              br(),
-              layout_column_wrap(
-                width = 1/2,
-                card(height = "450px",
-                     card_header("Statewide Race/Ethnicity (AP CS)"),
-                     plotlyOutput("race_bar_plot", height = "400px")),
-                card(height = "450px",
-                     card_header("Statewide Gender(AP CS)"),
-                     plotlyOutput("gender_bar_plot", height ="400px"))
-              ),
-              
-              br(),
-              
               tags$ul(
                 style = "padding-left:20px;font-size: 1.1rm; line-height:1.8;
                 margin-bottom:30px;list-style-type: '  -  '",
@@ -282,6 +270,48 @@ ui <- page_navbar(
                   p("The highest access rate appears(18%) in the City area, but the average enrollment in AP CS course is considerably low(16.9) 
                     given the average enrollment in this area is as high as 1023. Town area also has a lower access rate(5.6%).")
                 ),
+              hr(),
+              h5("Predictive Insights: School Size vs. Access"),
+              tabsetPanel(
+                type = "tabs",
+                tabPanel("Access Visualization",
+                         layout_column_wrap(
+                           width = 1/2,
+                           card(
+                             card_header("The Probability of Offering AP CS"),
+                             plotOutput("access_plot")
+                           ),
+                           card(
+                             card_header("What does this mean"),
+                             p("Our analysis shows that school's enrollment size is a stronger predictor of whether a 
+                               student has access to AP Computer Science comparing with school's locale."),
+                             p("The model suggests as schools grow in size, the 'probability' of offering AP CS course grows."),
+                             
+                           )
+                         )
+                         ),
+                tabPanel("Statistical Summary",
+                         card(
+                           card_header("Model Odds Ratio"),
+                           tableOutput("access_summary_table"),
+                           p("Note: 100 non-traditional programs were excluded to ensure the model reflects 
+                                   standard high school settings."))
+                         )),
+              
+              hr(),
+              h5("The Access Gap"),
+              layout_column_wrap(
+                width = 1/2,
+                card(height = "450px",
+                     card_header("Statewide AP CS Access by Race/Ethnicity"),
+                     plotlyOutput("race_bar_plot", height = "400px")),
+                card(height = "450px",
+                     card_header("Statewide AP CS Access by Gender"),
+                     plotlyOutput("gender_bar_plot", height ="400px"))
+              ),
+              
+              br(),
+              
                 tags$li(
                   p("Percentage of Students with AP CS by race/ethnicity"),
                   p("Historically underrepresented students continue to face persistent opportunity gaps."),
@@ -307,7 +337,7 @@ ui <- page_navbar(
               )), #nav_panel("Participation") ends
   
   
-  # OREGON ECOSYSTEM (2021-22)
+  ## OREGON ECOSYSTEM (2021-22)
   nav_panel("Beyond AP CS", icon = icon("map"),
            
             fluidPage(
@@ -522,8 +552,8 @@ ui <- page_navbar(
   )
     ) # ui page_nav ends
 
-#############################################################################
-# SERVER
+################################# SERVER ################################
+
 
 server <- function(input, output, session){
   
@@ -543,7 +573,7 @@ server <- function(input, output, session){
     updateNavbarPage(session, "main_tabs", selected = "Trends")
   })
 
-############################## PARTICIPATION PLOT #######################
+############################## AP PARTICIPATION #######################
 
   # map
   output$participation_map <- renderPlotly({
@@ -637,7 +667,78 @@ server <- function(input, output, session){
     
   })# Locale table ends
     
+  # Logit model
+  
+  output$access_plot <- renderPlot({
     
+    max_enroll <- max(ap_cs_model$hs_enrollment, na.rm = TRUE)
+    curve_data <- data.frame(
+      
+      hs_enroll_100 = seq(0, max_enroll/100, length.out = 200),
+      locale = factor("Rural", levels = c("Rural", "City", "Suburb", "Town"))
+    )
+    
+    curve_data$prob <- predict(ap_logit_model, newdata = curve_data, type = "response")
+    
+    ggplot(curve_data, aes(x = hs_enroll_100 * 100, y = prob)) +
+      
+      annotate("rect", xmin = 0, xmax = 35, ymin = 0, ymax = 1, fill = "red", alpha = 0.1) +
+      annotate("rect", xmin = 35, xmax = 493, ymin = 0, ymax = 1, fill = "yellow", alpha = 0.1) +
+      annotate("rect", xmin = 493, xmax = max_enroll, ymin = 0, ymax = 1, fill = "green", alpha = 0.1)+
+      
+      geom_line(color = "lightblue", size = 1.5) +
+      
+      annotate("text", x = 17, y = 0.95, label = "Small", angle = 90, size = 3) +
+      annotate("text", x = 250, y = 0.95, label = "Medium", size = 4) +
+      annotate("text", x = 700, y = 0.95, label = "Large", size = 4) +
+      
+      geom_rug(data = ap_cs_model, aes(x = hs_enrollment, y = as.numeric(has_ap_cs)),
+               sides = "b", alpha = 0.3, inherit.aes = FALSE) +
+      
+      scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+      scale_x_continuous(breaks = c(35, 493, 1000, 2000)) +
+      labs(
+        title = "Probability of AP CS Access by School Size",
+        subtitle = "Shaded area",
+        x = "High School Enrollment",
+        y = "Chance of Offering AP CS Course"
+      ) +
+      theme_minimal()
+        })
+  
+  output$access_summary_table <- renderTable({
+    
+    model_stats <- exp(cbind(OR = coef(ap_logit_model), confint(ap_logit_model)))
+    
+    df <- as.data.frame(model_stats)
+    p_values <- summary(ap_logit_model)$coefficients[,4]
+    
+    df <- df %>% 
+      mutate(
+        Variable = rownames(df),
+        `P-Value` = p_values,
+        Significance = case_when(
+          `P-Value` < 0.001 ~ "*** (Highly Significant)",
+          `P-Value` < 0.05 ~ "* (Significant)",
+          TRUE ~ "Not Significant"
+        )
+      ) %>% 
+      mutate(
+        Variable = case_when(
+          Variable == "(Intercept)" ~ "Baseline (Rural School)",
+          Variable == "localeCity" ~ "City vs. Rural",
+          Variable == "localeSuburb" ~ "Suburb vs. Rural",
+          Variable == "localeTown" ~ "Town vs. Rural",
+          Variable == "hs_enroll_100" ~ "Enrollment (per 100 students)",
+          TRUE ~ Variable
+        )) %>% 
+      select(Variable, Odds_Ratio = OR, `2.5 %`, `97.5 %`, Significance)
+    return(df)
+    
+  }, digits = 3, aligh = 'l')
+  
+  
+  # Logit model ends
   
   # Race plot
   output$race_bar_plot <- renderPlotly({
@@ -663,7 +764,7 @@ server <- function(input, output, session){
                                  "<br>Percent:", round(Percent, 1), "%")))+
       scale_fill_brewer(palette = "BrBG")+
       theme_minimal()+
-      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio by Race (%)") +
+      labs(x = NULL, y = "Statewide AP CS Course Enrollment by Race (%)") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
       
   
@@ -690,14 +791,14 @@ server <- function(input, output, session){
       ) +
       scale_fill_brewer() +
       theme_minimal() +
-      labs(x = NULL, y = "Statewide CS AP Course Enrollment Ratio by Gender (%)") +
+      labs(x = NULL, y = "Statewide AP CS Course Enrollment by Gender (%)") +
       theme(legend.position = "none")
     
     
   })# Gender plot ends
     
   
-############################# BEYOND CS AP TAB #######################
+############################# BEYOND AP CS TAB #######################
   
   all_subcategories <- sort(unique(eco_full_202122$subcategory))
   
@@ -1012,7 +1113,7 @@ server <- function(input, output, session){
   
 } #SERVER ENDS
 
-##############################################################################
+###################################### DEPLOYMENT ########################################
 # RUN APP
 shinyApp(ui = ui,server = server)
 #rsconnect::deployApp()
