@@ -31,6 +31,8 @@ oregon_shape <- states(cb = TRUE, resolution = "20m") %>%
 us_states <- states(cb = TRUE, resolution = "20m") %>% 
   shift_geometry()
 
+plot_base_size <- 16
+
 ##########################DATA LOADING################################
 
 part_202021 <- readRDS("data/or_apcs_202021.rds")
@@ -62,12 +64,20 @@ ui <- page_navbar(
   header = tags$head(
     tags$style(HTML("
                     body{
+                    font-size: 1.5vw;
                     padding-top: 100px;
                     }
                     h2{
+                    font-size: 3rem;
                     padding-top:20px;
                     margin-top: 50px;
                     clear: both;
+                    }
+                    h3{
+                    font-size: 2.5rem;
+                    }
+                    h4{
+                    font-size: 2rem;
                     }
                     .navbar{
                     z-index: 2000;
@@ -78,6 +88,9 @@ ui <- page_navbar(
                     }
                     .container-fluid{
                     margin-top: 20px;
+                    }
+                    .dataTable, .dataTables_wrapper {
+                    font-size: 1rem;
                     }
                     "))
   ),
@@ -354,12 +367,12 @@ ui <- page_navbar(
               p("While AP CS courses(2020-21) reflects participation in high-level academic tracks, this 2021-22 data shows the state's landscape of CS variety in Oregon.
               It represents the diverse pathways available to Oregon Students and school-level initiative to offer CS beyond traditional learning. These offerings include
               Web Development, Cybersecurity, Information System, Information Technology, Foundational CS, and Core CS."),
+              br(),
               h4("Data"),
               p("The final dataset is prepared through joining several dataset from the 2021-22 academic year: "),
               p(" - ODE Fall Membership Report from the Oregon Department of Education offers total school and enrollment to calculate access and participation rates."),
               p(" - Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
-              
-              
+              br(),
               h4("Oregon High School CS Course Map"),
               p("This interactive map visualizes the variety of CS course offered across Oregon. 
                 Each circle represents a unique high school. The size of the circle correspons to the relative number of CS course count, 
@@ -393,7 +406,7 @@ ui <- page_navbar(
               ),
             ),
             
-            br(),
+            hr(),
             layout_column_wrap(
               width = 1/2,
               card(
@@ -444,9 +457,12 @@ ui <- page_navbar(
               h2("U.S. Computer Science Degrees (2003-24)"),
               br(),
               h4("Introduction"),
+              
               p("This section presents the conferred bachelor degrees in computer science 
                 degree. By tracking data from 2003 to 2024, this tab provides visualization of how each states responding to the surging needs for talents with CS degrees.
                 It also offers an overview of where Oregon posits among the rest of states."),
+              br(),
+              
               h4("Data"),
               p("U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS)"),
               p(" - Number of degrees/certificates awarded at postsecondary institutions, by state and gender, CIP Code 11"),
@@ -491,7 +507,7 @@ ui <- page_navbar(
               br(),
               h5("In this table, likelyhood means how much times male students are
                            as likely to obtain a CS degree, 
-                           compared with female students"),
+                           compared with female students."),
               br(),
               h4("Source"),
               p(" - U.S. Department of Education, National Center for Education Statistics, Integrated Postsecondary Education Data System (IPEDS), 
@@ -511,7 +527,7 @@ ui <- page_navbar(
                 margin: 0px -40px 0px -40px;"
               ),# top,right,bottom,left
               
-              h2("U.S. Computer Science Degrees Trends(1965-24)"),
+              h2("U.S. Computer Science Degrees Trends(1965-22)"),
               br(),
               h4("Introduction"),
               p("This part of the project uses longitudinal data that record the changing pattern 
@@ -519,8 +535,11 @@ ui <- page_navbar(
               br(),
               h4("Data"),
               p("Degrees in computer and information sciences conferred by postsecondary institutions, by level of degree and sex of 
-              student: Academic years 1964-65 through 2021-22"),
-              p("Level's of Degrees, gender"),
+              student: Academic years 1964-65 through 2021-22."),
+              br(),
+              
+              p("This interactive chart below visualizes disparity of male and female CS degree receivers during the past 77 years.
+                The chart will automatically update to reflect your selections from the side bar."),
               
               layout_sidebar(
                 sidebar = sidebar(
@@ -608,6 +627,7 @@ server <- function(input, output, session){
       coord_sf(expand = FALSE)+
       theme_void() +
       theme(
+        base_size = plot_base_size,
         legend.position = "none")
     
     ggplotly(p_part, tooltip = "text") %>% 
@@ -637,7 +657,7 @@ server <- function(input, output, session){
     scale_fill_brewer(palette = "Set3") +
     theme_minimal() +
     labs(x = NULL, y = "Total AP CS Students Enrolled(2020-21)") +
-    theme(legend.position = "none")
+    theme(base_size = plot_base_size,legend.position = "none")
   
   ggplotly(locale_chart, tooltip = "text")
   
@@ -703,7 +723,7 @@ server <- function(input, output, session){
         x = "High School Enrollment",
         y = "Chance of Offering AP CS Course"
       ) +
-      theme_minimal()
+      theme_minimal(base_size = plot_base_size)
         })
   
   output$access_summary_table <- renderTable({
@@ -765,7 +785,7 @@ server <- function(input, output, session){
       scale_fill_brewer(palette = "BrBG")+
       theme_minimal()+
       labs(x = NULL, y = "Statewide AP CS Course Enrollment by Race (%)") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+      theme(base_size = plot_base_size, axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
       
   
   }) # Race plot ends
@@ -792,7 +812,7 @@ server <- function(input, output, session){
       scale_fill_brewer() +
       theme_minimal() +
       labs(x = NULL, y = "Statewide AP CS Course Enrollment by Gender (%)") +
-      theme(legend.position = "none")
+      theme(base_size = plot_base_size, legend.position = "none")
     
     
   })# Gender plot ends
