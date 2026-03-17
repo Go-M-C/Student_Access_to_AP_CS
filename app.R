@@ -239,6 +239,7 @@ ui <- page_navbar(
               Though taking the AP courses is not a prerequisite for the exams,
                 students are encouraged to take the AP course as a preparation for this high-stake exam. 
                 This part of analyisis focus on AP Computer Science (AP CS) participation in Oregon."),
+              br(),
               h4("Data"),
               p("The final dataset is prepared through joining several dataset from the 2020-21 academic year: "), 
               p(" - Civil Rights Data Collection (CRDC) from the U.S. Department of Education provides student enrollment in AP CS, 
@@ -247,7 +248,7 @@ ui <- page_navbar(
               p(" - Oregon CresMap from the CODE.org, provides geographic meta data and NCES locale classifications(City, Suburb, Rural, Town)."),
               p(" - This multi-source dataset allow us to examine equity gaps by the physical locations of the schools."),
               
-              
+              br(),
               h4("AP CS Participation Map"),
               p("This interactive map visualizes the distribution of AP CS access across Oregon. Each circle represents a unique high school.
               The size of the circle correspons to the school's total enrollment, while the color indicates whether the school reported AP CS participation.
@@ -531,14 +532,14 @@ ui <- page_navbar(
               br(),
               h4("Introduction"),
               p("This part of the project uses longitudinal data that record the changing pattern 
-                of computer science by different degree levels"),
+                of computer science by different degree levels."),
               br(),
               h4("Data"),
               p("Degrees in computer and information sciences conferred by postsecondary institutions, by level of degree and sex of 
               student: Academic years 1964-65 through 2021-22."),
               br(),
               
-              p("This interactive chart below visualizes disparity of male and female CS degree receivers during the past 77 years.
+              p("This interactive chart in below visualizes the disparity of male and female CS degree receivers during the past 57 years.
                 The chart will automatically update to reflect your selections from the side bar."),
               
               layout_sidebar(
@@ -1054,7 +1055,9 @@ server <- function(input, output, session){
               class = "display",
               style = "bootstrap4",
               rownames = FALSE,
-              options = list(scrollX = TRUE, autoWidth = TRUE),
+              options = list(pageLength = 10, 
+                             scrollX = TRUE, 
+                             autoWidth = TRUE),
               caption = htmltools::tags$caption(
                 style = 'caption-side:bottom;text-align:left;',
                 'Source: IPEDS Completions data (2002-2024)'
