@@ -156,7 +156,7 @@ ui <- page_navbar(
               gap = "20px",
               
               card(
-                card_image(file = "www:/classparticipation.png", 
+                card_image(file = "www/classparticipation.png", 
                            style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
                 card_body(
                   style = "text-align: center;height: 80px;display:flex;align-items:center;
@@ -166,7 +166,7 @@ ui <- page_navbar(
                 )
               ),
               card(
-                card_image(file = "www:/edtech tree.jpg", 
+                card_image(file = "www/edtech tree.jpg", 
                            style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
                 card_body(
                   style = "text-align: center;",
@@ -175,7 +175,7 @@ ui <- page_navbar(
                 )
               ),
               card(
-                card_image(file = "www:/degree.jpg", 
+                card_image(file = "www/degree.jpg", 
                            style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
                 card_body(
                   style = "text-align: center;",
@@ -184,7 +184,7 @@ ui <- page_navbar(
                 )
               ),
               card(
-                card_image(file = "www:/Trends.png", 
+                card_image(file = "www/Trends.png", 
                            style ="height: 250px; object-fit: cover; border-radius: 15px 15px 0 0;"),
                 card_body(
                   style = "text-align: center;",
